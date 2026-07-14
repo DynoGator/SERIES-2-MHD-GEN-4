@@ -1,8 +1,14 @@
+import os
+import sys
 import subprocess
 import zmq
 import json
 import time
 import h5py
+
+# Add the project root to sys.path so we can import modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from telemetry.dslv_zpdi_pipeline import DSLVZPDIPipeline
 from config.sites import SITES
 
