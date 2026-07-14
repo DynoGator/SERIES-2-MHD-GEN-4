@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mhd-twin
+  namespace: mhd-twin
+  labels:
+    app: mhd-twin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mhd-twin
+  template:
+    metadata:
+      labels:
+        app: mhd-twin
+    spec:
+      containers:
+        - name: twin
+          image: 2mhd-twin:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "scripts/field_bootstrap.py"]
+          ports:
+            - name: zmq
+              containerPort: 5555
+          env:
+            - name: FPGA_MOCK
+              value: "1"
+            - name: PYTHONPATH
+              value: "/opt/2mhd-digital-twin"
+          envFrom:
+            - configMapRef:
+                name: mhd-twin-config
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+              ephemeral-storage: "5Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              ephemeral-storage: "10Gi"
+          volumeMounts:
+            - name: telemetry
+              mountPath: /opt/2mhd-digital-twin/outputs
+      volumes:
+        - name: telemetry
+          persistentVolumeClaim:
+            claimName: mhd-twin-telemetry

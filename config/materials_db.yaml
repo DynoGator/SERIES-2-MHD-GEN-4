@@ -1,0 +1,133 @@
+# 2MHDBMRIPS GEN-5.0-PRA — Procurement Bill of Materials
+# Costs are USD per unit at prototype (qty=1) pricing. Categories:
+#   mechanical | electrical | thermal | control
+# This file feeds config.materials_db.BOMGenerator. It is the procurement BOM,
+# distinct from the physics MATERIALS_DB in materials_db.py.
+items:
+  - name: "Zynq-7000 SoC (xc7z020clg400-1)"
+    category: control
+    unit_cost_usd: 180.0
+    qty_per_unit: 1
+    supplier: "AMD/Xilinx (Digi-Key)"
+    supplier_url: "https://www.digikey.com/en/products/detail/amd/XC7Z020-1CLG400C"
+    lead_time_weeks: 16
+
+  - name: "LBE-1421 GPSDO module"
+    category: control
+    unit_cost_usd: 400.0
+    qty_per_unit: 1
+    supplier: "Leo Bodnar Electronics"
+    supplier_url: "https://www.leobodnar.com/shop/index.php?main_page=product_info&products_id=393"
+    lead_time_weeks: 12
+
+  - name: "Hackberry Pi CM5 carrier"
+    category: control
+    unit_cost_usd: 120.0
+    qty_per_unit: 1
+    supplier: "ZitaoTech"
+    supplier_url: "https://github.com/ZitaoTech/Hackberry-Pi_Zero"
+    lead_time_weeks: 8
+
+  - name: "18650 VTC6 battery cells"
+    category: electrical
+    unit_cost_usd: 10.0
+    qty_per_unit: 2
+    supplier: "Sony/Murata (authorized)"
+    supplier_url: "https://www.imrbatteries.com/sony-murata-vtc6/"
+    lead_time_weeks: 4
+
+  - name: "Geekworm X1202 power management"
+    category: electrical
+    unit_cost_usd: 30.0
+    qty_per_unit: 1
+    supplier: "Geekworm"
+    supplier_url: "https://geekworm.com/products/x1202"
+    lead_time_weeks: 5
+
+  - name: "Tungsten-copper (W-Cu) electrodes"
+    category: thermal
+    unit_cost_usd: 1200.0
+    qty_per_unit: 1
+    supplier: "Plansee / Mi-Tech Metals"
+    supplier_url: "https://www.plansee.com/en/materials/tungsten-copper.html"
+    lead_time_weeks: 14
+
+  - name: "Alumina (Al2O3) channel insulators"
+    category: thermal
+    unit_cost_usd: 600.0
+    qty_per_unit: 1
+    supplier: "CoorsTek"
+    supplier_url: "https://www.coorstek.com/en/materials/alumina/"
+    lead_time_weeks: 10
+
+  - name: "Seed material K2CO3 (kg)"
+    category: thermal
+    unit_cost_usd: 150.0
+    qty_per_unit: 1
+    supplier: "Sigma-Aldrich"
+    supplier_url: "https://www.sigmaaldrich.com/US/en/product/sigald/209619"
+    lead_time_weeks: 4
+
+  - name: "TEG modules (Bi2Te3)"
+    category: thermal
+    unit_cost_usd: 800.0
+    qty_per_unit: 1
+    supplier: "Marlow Industries (II-VI)"
+    supplier_url: "https://www.marlow.com/"
+    lead_time_weeks: 8
+
+  - name: "Piezoelectric harvesters (PZT-5A)"
+    category: mechanical
+    unit_cost_usd: 500.0
+    qty_per_unit: 1
+    supplier: "APC International"
+    supplier_url: "https://www.americanpiezo.com/"
+    lead_time_weeks: 6
+
+  - name: "DICAS stator laminations (silicon steel)"
+    category: electrical
+    unit_cost_usd: 900.0
+    qty_per_unit: 1
+    supplier: "Proto Laminations / AK Steel"
+    supplier_url: "https://www.protolam.com/"
+    lead_time_weeks: 12
+
+  - name: "MHD channel body / pressure vessel"
+    category: mechanical
+    unit_cost_usd: 1500.0
+    qty_per_unit: 1
+    supplier: "Custom fab (Xometry)"
+    supplier_url: "https://www.xometry.com/"
+    lead_time_weeks: 10
+
+  - name: "Cooling / hydraulic regeneration loop"
+    category: mechanical
+    unit_cost_usd: 700.0
+    qty_per_unit: 1
+    supplier: "Lytron / Custom"
+    supplier_url: "https://www.boydcorp.com/thermal.html"
+    lead_time_weeks: 8
+
+  - name: "Wiring, connectors, and control PCB"
+    category: electrical
+    unit_cost_usd: 300.0
+    qty_per_unit: 1
+    supplier: "Mouser / JLCPCB"
+    supplier_url: "https://jlcpcb.com/"
+    lead_time_weeks: 5
+
+  - name: "Enclosure and structural frame"
+    category: mechanical
+    unit_cost_usd: 600.0
+    qty_per_unit: 1
+    supplier: "80/20 Inc. / Custom weldment"
+    supplier_url: "https://8020.net/"
+    lead_time_weeks: 6
+
+  - name: "Thermal & pressure sensor suite"
+    category: thermal
+    unit_cost_usd: 400.0
+    qty_per_unit: 1
+    supplier: "Omega Engineering"
+    supplier_url: "https://www.omega.com/"
+    lead_time_weeks: 6

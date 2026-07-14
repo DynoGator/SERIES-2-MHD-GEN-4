@@ -64,7 +64,11 @@ class MainWindow(QMainWindow):
         from gui.widgets.hil_panel import HILPanel
         self.hil_panel = HILPanel()
         self.tabs.addTab(self.hil_panel, "HIL")
-        
+
+        from gui.widgets.production_panel import ProductionPanel
+        self.production_panel = ProductionPanel()
+        self.tabs.addTab(self.production_panel, "Production")
+
         # Create dummy tabs for Telemetry and Logs to satisfy spec
         self.tabs.addTab(QWidget(), "Telemetry")
         self.tabs.addTab(QWidget(), "Logs")

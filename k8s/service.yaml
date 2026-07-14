@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mhd-twin
+  namespace: mhd-twin
+  labels:
+    app: mhd-twin
+spec:
+  type: ClusterIP
+  selector:
+    app: mhd-twin
+  ports:
+    - name: zmq
+      protocol: TCP
+      port: 5555
+      targetPort: 5555

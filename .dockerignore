@@ -1,0 +1,16 @@
+venv/
+.git/
+.claude/
+outputs/
+*.h5
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+*.deb
+packaging/2mhd-digital-twin_1.0.0_amd64/
+snapshot.h5
