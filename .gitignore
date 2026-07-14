@@ -1,0 +1,57 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Outputs & data
+outputs/
+*.h5
+*.jsonl
+*.json
+!outputs/.gitkeep
+
+# Packaging artifacts
+*.deb
+*.spec
+*.tar.gz
+*.zip
+
+# FPGA build artifacts
+*.bit
+*.xsa
+*.log
+*.jou
+*.str
+build.hw/
+build.ip_user_files/
+build.runs/
+build.sim/
+build.synth/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NEVER ignore these
+!hardware/rtl/
+!constraints/
+!config/
+!packaging/
+!tests/
+!docs/
+!systemd/
+!.github/

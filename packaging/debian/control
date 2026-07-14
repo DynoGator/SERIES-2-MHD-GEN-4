@@ -1,0 +1,9 @@
+Package: 2mhd-digital-twin
+Version: 1.0.0
+Section: science
+Priority: optional
+Architecture: amd64
+Depends: python3 (>= 3.11), libgl1, libxcb-xinerama0
+Maintainer: Resonant Genesis LLC <dynogator@resonantgenesis.io>
+Description: 2MHDBMRIPS GEN-4.0-PRA Digital Twin
+ Modular exergy-cascade MHD generator validation platform.

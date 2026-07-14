@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+rm -f /usr/bin/2mhd-digital-twin
+update-desktop-database /usr/share/applications || true
+
+exit 0

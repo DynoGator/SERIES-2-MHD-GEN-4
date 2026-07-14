@@ -1,0 +1,17 @@
+[Unit]
+Description=2MHDBMRIPS GEN-4.0-PRA Digital Twin Edge Node
+After=network.target
+
+[Service]
+Type=simple
+User=dynogator
+WorkingDirectory=/opt/2mhd-digital-twin
+Environment="PYTHONPATH=/opt/2mhd-digital-twin"
+Environment="FPGA_MOCK=0"
+Environment="HIL_ENABLED=1"
+ExecStart=/usr/bin/env python3 scripts/field_bootstrap.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

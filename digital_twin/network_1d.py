@@ -1,0 +1,169 @@
+"""
+Level 1 Runner: 1D Network Model
+"""
+import numpy as np
+from typing import List, Optional
+from core.state_vector import StateVector
+from core.integrator import RK45Integrator
+from core.logging import TelemetryRingBuffer
+from core.state_bounds import check_bounds, SafetyEvent
+from config.system_config import SystemConfig
+from physics.base import ControlVector, PowerLedger
+
+from physics.thermo.working_fluid import WorkingFluid
+from physics.mhd.conductivity import PlasmaConductivity
+from physics.mhd.segmented_channel import SegmentedFaradayChannel
+from physics.thermo.fross4 import FROSS4
+from physics.mechanical.rotor import RotorDynamics
+from physics.thermo.heat_transfer import HeatTransfer
+from physics.electromagnetic.stator import DICASHybridStator
+from physics.mhd.lorentz_force import LorentzForce
+from physics.acoustic.modal_id import AcousticModalID
+from physics.thermo.seed_loop import SeedLoop
+
+from control.fpga import FPGAPhaseEngine
+from control.state_machine import TwinStateMachine, TwinState, StateEvent
+
+class Network1DTwin:
+    def __init__(self, config: SystemConfig):
+        self.config = config
+        self.integrator = RK45Integrator()
+        self.telemetry = TelemetryRingBuffer()
+        
+        self.state_machine = TwinStateMachine(config)
+        self.fpga = FPGAPhaseEngine(config)
+        
+        self.channel = SegmentedFaradayChannel(8, config)
+        self.fross = FROSS4(config)
+        
+        self.modules = [
+            WorkingFluid("B", config),
+            PlasmaConductivity("K", config),
+            self.channel,
+            self.fross,
+            RotorDynamics(config),
+            HeatTransfer(config),
+            DICASHybridStator(config),
+            LorentzForce(config),
+            AcousticModalID(config),
+            SeedLoop(config)
+        ]
+        
+        self.time = 0.0
+        
+        self.state = StateVector(
+            theta=0.0,
+            omega=0.0,
+            T_core=config.coolant_temp,
+            p_vessel=config.p_init,
+            V_accum=config.accum_vol
+        )
+        
+        self.control = ControlVector()
+        self.power_ledgers = []
+
+    @property
+    def current_state(self) -> StateVector:
+        return self.state
+
+    def set_control(self, control: ControlVector):
+        self.control = control
+
+    def step(self, dt: float) -> StateVector:
+        if self.state.p_vessel > self.config.max_pressure_vessel:
+            self.state_machine.transition(StateEvent.SAFETY_FAULT)
+            
+        fault_latch = (self.state_machine.current_state == TwinState.FAULT_LATCH)
+        
+        self.fpga.tick(self.control.phase_cmd, fault_latch)
+        
+        def cur_dydt(t, y):
+            sv = StateVector.from_array(y, has_segments=True)
+            d_total = {}
+            for mod in self.modules:
+                contrib = mod.compute(sv, self.control, self.config)
+                for k, v in contrib.dydt.items():
+                    d_total[k] = d_total.get(k, 0.0) + v
+                    
+            base_dydt = np.array([
+                d_total.get("theta", 0.0),
+                d_total.get("omega", 0.0),
+                d_total.get("T_core", 0.0),
+                d_total.get("p_vessel", 0.0),
+                d_total.get("V_accum", 0.0),
+                d_total.get("m_seed", 0.0),
+                d_total.get("T_electron", 0.0),
+                d_total.get("coherence_r", 0.0)
+            ], dtype=np.float64)
+            
+            return np.concatenate([base_dydt, np.zeros(16, dtype=np.float64)])
+            
+        t_span = (self.time, self.time + dt)
+        y0 = self.state.to_array()
+        
+        sol = self.integrator.solve(t_span, y0, cur_dydt)
+        
+        y_final = sol.y[:, -1]
+        self.time = sol.t[-1]
+        
+        base_state = StateVector.from_array(y_final, has_segments=True)
+        
+        total_generated = 0.0
+        total_dissipated = 0.0
+        active_modules = []
+        
+        for mod in self.modules:
+            contrib = mod.compute(base_state, self.control, self.config)
+            total_generated += contrib.power_ledger.power_generated_w
+            total_dissipated += contrib.power_ledger.power_dissipated_w
+            if contrib.dydt or contrib.power_ledger.power_generated_w != 0 or contrib.power_ledger.power_dissipated_w != 0:
+                active_modules.append(mod.__class__.__name__)
+                
+        ledger = PowerLedger(
+            power_generated_w=total_generated,
+            power_dissipated_w=total_dissipated,
+            power_uncertain_w=0.0
+        )
+        self.power_ledgers.append(ledger)
+        
+        self.state = base_state.evolve(
+            segment_currents=self.channel._currents.copy(),
+            segment_voltages=self.channel._voltages.copy(),
+            segment_powers=self.channel._powers.copy()
+        )
+
+        event = check_bounds(self.state)
+        if event:
+            self.state_machine.transition(StateEvent.SAFETY_FAULT)
+            
+        modal_coherence = 1.0
+        seed_inventory = self.state.m_seed
+
+        self.telemetry.log(
+            sim_time_s=self.time,
+            state_vector=self.state.model_dump(),
+            control_inputs={},
+            power_terms=ledger.__dict__,
+            safety_state=self.state_machine.current_state.name,
+            rng_seed=42,
+            physics_modules_active=active_modules,
+            power_ledger_total_w=total_generated - total_dissipated,
+            exergy_destroyed_w=total_dissipated,
+            segment_currents=self.state.segment_currents.tolist() if self.state.segment_currents is not None else [],
+            segment_powers=self.state.segment_powers.tolist() if self.state.segment_powers is not None else [],
+            state_machine_state=self.state_machine.current_state.name,
+            fpga_phase_lock_ok=self.fpga.phase_lock_ok,
+            modal_coherence=modal_coherence,
+            seed_inventory=seed_inventory
+        )
+        
+        return self.state
+
+    def run(self, t_end: float) -> TelemetryRingBuffer:
+        dt = 0.01
+        steps = int(t_end / dt)
+        for _ in range(steps):
+            self.step(dt)
+            if self.state_machine.current_state == TwinState.FAULT_LATCH:
+                break
+        return self.telemetry

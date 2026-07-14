@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "2mhd_digital_twin"
+version = "0.1.0"
+description = "Digital twin of an MHD generator"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.11",
+    "pydantic>=2.0",
+    "h5py>=3.8",
+    "matplotlib>=3.7",
+    "numba>=0.57",
+    "pint>=0.20",
+    "orjson>=3.9"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core", "config", "physics", "control", "digital_twin"]

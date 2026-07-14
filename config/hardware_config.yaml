@@ -1,0 +1,13 @@
+hil_enabled: true
+fpga:
+  ip: "192.168.1.10"
+  udp_port: 5000
+  uart_dev: "/dev/ttyUSB0"
+  bitstream_path: "hardware/bitstream/mhd_fpga_top.bit"
+gpsdo:
+  model: "LBE-1421"
+  pps_dev: "/dev/pps0"
+  clock_freq_hz: 10000000
+cm5:
+  thermal_zone: "/sys/class/thermal/thermal_zone0/temp"
+mock_fallback: true
