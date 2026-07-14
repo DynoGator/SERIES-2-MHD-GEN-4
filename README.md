@@ -1,7 +1,7 @@
 # SERIES-2-MHD-GEN-4
 ## Second-Generation Magnetohydrodynamic Boilermaker Modular Resonant Inductive Plasma Scavenger
 
-[![Tests](https://img.shields.io/badge/tests-154%2F154-passing-green)]()
+[![Tests](https://img.shields.io/badge/tests-197%2F197-passing-green)]()
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![TRL](https://img.shields.io/badge/TRL-2--3%20(System)%20%7C%203--7%20(Subsystems)-orange)]()
