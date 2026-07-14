@@ -58,7 +58,18 @@ class DSLVZPDIPipeline:
             derived.create_dataset("exergy_efficiency", data=telemetry.get("exergy", {}).get("eta_ii", 0.0))
             derived.create_dataset("power_net", data=0.0)
             derived.create_dataset("bootstrap_fraction", data=0.0)
-            
+
+            # Phase 8: production / commercial provenance (additive).
+            prod = telemetry.get("production", {})
+            comp = prod.get("compliance_status", {"fcc": False, "ce": False, "ul": False})
+            production = grp.create_group("production")
+            production.attrs["production_unit_id"] = str(prod.get("production_unit_id", "UNSET"))
+            production.attrs["batch_number"] = str(prod.get("batch_number", "UNSET"))
+            production.create_dataset("compliance_fcc", data=bool(comp.get("fcc", False)))
+            production.create_dataset("compliance_ce", data=bool(comp.get("ce", False)))
+            production.create_dataset("compliance_ul", data=bool(comp.get("ul", False)))
+            production.create_dataset("cost_to_date_usd", data=float(prod.get("cost_to_date_usd", 0.0)))
+
         return h5_path
 
     def validate_schema(self, h5_path: str) -> bool:

@@ -1,7 +1,13 @@
+import os
+import sys
 import yaml
 import json
 import time
 from datetime import datetime
+
+# Add the project root to sys.path so we can import modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config.system_config import SystemConfig
 from digital_twin.channel_2d import Channel2DTwin
 from hardware.fpga_interface import FPGAInterface

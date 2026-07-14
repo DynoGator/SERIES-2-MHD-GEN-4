@@ -16,6 +16,8 @@ outputs/
 *.jsonl
 *.json
 !outputs/.gitkeep
+# Tracked JSON assets (exceptions to the *.json ignore above)
+!grafana/dashboard.json
 
 # Packaging artifacts
 *.deb

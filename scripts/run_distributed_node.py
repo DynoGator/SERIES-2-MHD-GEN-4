@@ -1,5 +1,11 @@
+import os
+import sys
 import argparse
 import time
+
+# Add the project root to sys.path so we can import modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config.system_config import SystemConfig
 from config.sites import SITES
 from digital_twin.channel_2d import Channel2DTwin

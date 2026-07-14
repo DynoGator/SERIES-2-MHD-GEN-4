@@ -1,0 +1,25 @@
+# 2MHDBMRIPS GEN-5.0-PRA — Unit Economics / Cost Model
+# The spreadsheet is the contract. If the BOM doesn't close, the machine doesn't ship.
+
+unit_cost_target_usd:
+  min: 10000
+  max: 25000
+  target: 18000
+
+# Fractions of fully-burdened unit cost. Must sum to 1.0.
+bom_breakdown:
+  materials_pct: 0.45
+  labor_pct: 0.25
+  overhead_pct: 0.20
+  margin_pct: 0.10
+
+production_volume:
+  prototype: 1
+  pilot: 10
+  scale: 100
+
+# One-time regulatory certification budget (not per-unit).
+regulatory_budget_usd:
+  fcc_pre_check: 5000
+  ce_marking: 8000
+  ul_listing: 12000

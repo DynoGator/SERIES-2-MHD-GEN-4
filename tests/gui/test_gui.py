@@ -19,7 +19,10 @@ def test_main_window(qtbot):
     window = MainWindow()
     qtbot.addWidget(window)
     assert window.windowTitle() == "2MHDBMRIPS Digital Twin — GEN-4.0-PRA"
-    assert window.tabs.count() == 8
+    # 9 tabs after Phase 8 added the Production tab
+    assert window.tabs.count() == 9
+    tab_titles = [window.tabs.tabText(i) for i in range(window.tabs.count())]
+    assert "Production" in tab_titles
     window.close()
 
 def test_schematic_view(qtbot):

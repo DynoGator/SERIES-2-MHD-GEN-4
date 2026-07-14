@@ -1,0 +1,151 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.4.0" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "title": "2MHDBMRIPS GEN-5.0-PRA — Live Telemetry",
+  "uid": "mhd-twin-main",
+  "tags": ["mhd", "resonant-genesis", "digital-twin"],
+  "time": { "from": "now-5m", "to": "now" },
+  "refresh": "1s",
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "state-timeline",
+      "title": "Toroidal Schematic — Segment Status",
+      "description": "8-segment torus, color-coded green/yellow/red",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "targets": [{ "expr": "mhd_segment_status", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "type": "gauge",
+      "title": "T_core (Core Temperature)",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kelvin",
+          "min": 300,
+          "max": 4000,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3200 },
+              { "color": "red", "value": 3500 }
+            ]
+          }
+        }
+      },
+      "targets": [{ "expr": "mhd_t_core_kelvin", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "P_vessel",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 6 },
+      "fieldConfig": {
+        "defaults": { "unit": "pressurebar", "min": 0, "max": 2 }
+      },
+      "options": { "legend": { "showLegend": true } },
+      "targets": [{ "expr": "mhd_p_vessel_bar", "refId": "A" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Exergy Efficiency",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 40 },
+              { "color": "green", "value": 60 }
+            ]
+          }
+        }
+      },
+      "targets": [{ "expr": "mhd_exergy_efficiency_pct", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "type": "barchart",
+      "title": "Segment Power (8 Faraday segments)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "fieldConfig": { "defaults": { "unit": "watt" } },
+      "targets": [{ "expr": "mhd_segment_power_watt", "refId": "A" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Safety State",
+      "description": "green=ARMED, amber=WARNING, red=FAULT_LATCH",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 14 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "ARMED", "color": "green" } } },
+            { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+            { "type": "value", "options": { "2": { "text": "FAULT_LATCH", "color": "red" } } },
+            { "type": "value", "options": { "3": { "text": "EMERGENCY_DUMP", "color": "dark-red" } } }
+          ]
+        }
+      },
+      "targets": [{ "expr": "mhd_safety_state", "refId": "A" }]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "GPSDO Lock Status",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 14 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ns",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "UNLOCKED", "color": "red" } } },
+            { "type": "value", "options": { "1": { "text": "LOCKED", "color": "green" } } }
+          ]
+        }
+      },
+      "targets": [
+        { "expr": "mhd_gpsdo_locked", "refId": "A" },
+        { "expr": "mhd_tdc_phase_error_ns", "refId": "B" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "HIL Telemetry",
+      "description": "FPGA temp, CM5 temp, Allan deviation, mock flag",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "targets": [
+        { "expr": "mhd_fpga_temp_c", "refId": "A" },
+        { "expr": "mhd_cm5_temp_c", "refId": "B" },
+        { "expr": "mhd_allan_deviation", "refId": "C" },
+        { "expr": "mhd_mock_flag", "refId": "D" }
+      ]
+    }
+  ]
+}

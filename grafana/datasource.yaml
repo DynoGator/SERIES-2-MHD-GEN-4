@@ -1,0 +1,10 @@
+apiVersion: 1
+
+# Prometheus scrape of the twin's telemetry exporter (or InfluxDB alt).
+datasources:
+  - name: MHD-Twin-Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true

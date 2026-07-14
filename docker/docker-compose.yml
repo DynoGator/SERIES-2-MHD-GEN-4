@@ -1,0 +1,35 @@
+# 2MHDBMRIPS GEN-5.0-PRA — twin + ZMQ + Grafana stack
+services:
+  twin:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: 2mhd-twin:latest
+    container_name: mhd-twin
+    environment:
+      - FPGA_MOCK=1
+      - PYTHONPATH=/opt/2mhd-digital-twin
+    ports:
+      - "5555:5555"   # ZeroMQ telemetry
+    volumes:
+      - twin-telemetry:/opt/2mhd-digital-twin/outputs
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: mhd-grafana
+    depends_on:
+      - twin
+    ports:
+      - "8080:3000"   # Grafana UI
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=dynogator
+    volumes:
+      - ../grafana:/etc/grafana/provisioning/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  twin-telemetry:
+  grafana-data:

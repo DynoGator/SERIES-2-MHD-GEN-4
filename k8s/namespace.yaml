@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mhd-twin
+  labels:
+    app.kubernetes.io/name: 2mhd-digital-twin
+    app.kubernetes.io/part-of: resonant-genesis

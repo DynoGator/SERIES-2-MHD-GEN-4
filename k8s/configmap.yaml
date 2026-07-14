@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mhd-twin-config
+  namespace: mhd-twin
+data:
+  HIL_ENABLED: "0"
+  LOG_LEVEL: "INFO"
+  # Active site profiles (must match config/sites.py)
+  SITE_PROFILES: "penrose_co,albuquerque_nm"
+  DEFAULT_SITE: "penrose_co"
