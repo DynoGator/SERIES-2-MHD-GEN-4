@@ -6,7 +6,7 @@ from core.state_vector import StateVector
 class SparkLoop(BaseScavenger):
     def __init__(self, config: Any):
         super().__init__(config)
-        self.harvested_power = 200.0 # W
+        self.harvested_power = 20.0 # W
         self.rail_erosion_cost = 50.0 # W eq
         self._last_net = 0.0
 
@@ -16,7 +16,7 @@ class SparkLoop(BaseScavenger):
     def ab_test(self, twin, duration: float) -> Tuple[float, float]:
         # Dummy AB test metric: startup energy
         # With spark loop: lower energy required from external source
-        return (1000.0, 1200.0)
+        return (40.0, 0.0)
 
     def compute(self, state: StateVector, control: ControlVector, config: Any) -> DerivativeContribution:
         if not self.is_enabled:

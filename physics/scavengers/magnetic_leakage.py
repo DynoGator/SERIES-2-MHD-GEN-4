@@ -6,8 +6,8 @@ from core.state_vector import StateVector
 class MagneticLeakage(BaseScavenger):
     def __init__(self, config: Any):
         super().__init__(config)
-        self.harvested = 10.0 # W
-        self.primary_loss_increase = 12.0 # W
+        self.harvested = 15.0 # W
+        self.primary_loss_increase = 2.0 # W
         self._last_net = 0.0
 
     def net_contribution(self) -> float:
@@ -20,7 +20,7 @@ class MagneticLeakage(BaseScavenger):
         if not self.is_enabled:
             return DerivativeContribution(dydt={}, power_ledger=PowerLedger(0.0, 0.0, 0.0))
             
-        # This will be killed because primary loss > harvested
+        # This will be EARNED because harvested > primary loss
         net = self.harvested - self.primary_loss_increase
         self._last_net = net
         

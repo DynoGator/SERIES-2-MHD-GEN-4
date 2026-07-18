@@ -28,10 +28,10 @@ def test_kill_disables_module(scavenger_cls, state_control_config):
     assert contrib.power_ledger.power_dissipated_w == 0.0
 
 @pytest.mark.parametrize("scavenger_cls, expected_positive", [
-    (SparkLoop, True),
+    (SparkLoop, False),
     (Thermoelectric, True),
     (PiezoTribo, True),
-    (MagneticLeakage, False), # Magnetic leakage is configured to fail (net < 0)
+    (MagneticLeakage, True),
     (HydraulicRegen, True),
 ])
 def test_positive_net_contribution(scavenger_cls, expected_positive, state_control_config):

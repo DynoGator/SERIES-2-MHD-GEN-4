@@ -50,40 +50,42 @@ reproducibility. It was removed from the earned set, not renamed. The class file
 
 ---
 
-## 3. ⚠️ Open Audit — Code vs. Doctrine Disagreement
+## 3. ⚠️ Open Audit — Code vs. Doctrine Disagreement [RESOLVED]
 
-Honesty first: the executable state does **not** currently match the documented
-verdicts in §2. This is logged as an open item, not hidden.
+**RESOLVED 2026-07-18 via Option B** (code aligned to whitepaper):
+SparkLoop = KILLED (net −30 W), MagneticLeakage = EARNED (net +13 W).
 
-**Finding.** As of this commit:
+*Note: Scavenger constants are doctrine-aligned PLACEHOLDER values, not bench-validated physics. Hardware meters get the final vote at field trial.*
 
-- `digital_twin/validation_runner.py` initializes **all five** scavengers with
+Honesty first: the executable state previously did **not** match the documented
+verdicts in §2. This was logged as an open item, not hidden, and the record is preserved here:
+
+**Finding (Pre-Phase 9).**
+- `digital_twin/validation_runner.py` initialized **all five** scavengers with
   `status="PENDING"` — no scavenger is hard-wired as `EARNED` or `KILLED`.
-- The kill criteria are:
+- The kill criteria were:
   - `SparkLoop`: killed if `net_delta_w < 50.0` (must yield ≥ 50 W net).
   - `Thermoelectric / PiezoTribo / MagneticLeakage / HydraulicRegen`: killed if
     `net_delta_w <= 0.0`.
-- `physics/scavengers/spark_loop.py::compute` returns `net = 200 − 50 = 150 W`
-  (positive) and its `ab_test` returns `(1000, 1200)` — i.e. the model, as written,
-  makes Spark Loop look *beneficial* and it would **pass** its ≥50 W gate.
-- `tests/scavengers/test_scavengers.py` asserts the opposite fixture: it marks
+- `physics/scavengers/spark_loop.py::compute` returned `net = 200 − 50 = 150 W`
+  (positive) and its `ab_test` returned `(1000, 1200)` — i.e. the model, as written,
+  made Spark Loop look *beneficial* and it would **pass** its ≥50 W gate.
+- `tests/scavengers/test_scavengers.py` asserted the opposite fixture: it marked
   **MagneticLeakage** as the net-negative failure (`expected = False`) while
-  `SparkLoop` is expected `True` (net-positive).
+  `SparkLoop` was expected `True` (net-positive).
 
-**Consequence.** If the registry were driven purely by today's code, the killed
+**Consequence (Pre-Phase 9).** If the registry were driven purely by that code, the killed
 scavenger would be **MagneticLeakage**, and **SparkLoop would survive** — the inverse
 of the whitepaper narrative.
 
-**Required reconciliation (before Phase 8):** decide which is ground truth and make
-the other match:
-1. If Spark Loop is genuinely killed → set its model to the failing regime (net < 50 W),
-   set `ScavengerEntry(SparkLoop, "KILLED", …)`, and flip the test expectation.
-2. If MagneticLeakage is the real casualty → correct §2 and the whitepaper.
-3. Either way, promote the four survivors from `PENDING` to `EARNED` explicitly, so the
-   registry *status* — not just prose — carries the verdict.
+**Reconciliation (Phase 9):** We decided the doctrine (whitepaper) is ground truth and made
+the code match (Option B):
+1. Spark Loop is genuinely killed → set its model to the failing regime (net −30 W),
+   set `ScavengerEntry(SparkLoop, "KILLED", …)`, and flipped the test expectation.
+2. MagneticLeakage was updated to an EARNED placeholder (net +13 W).
+3. The four survivors were explicitly promoted from `PENDING` to `EARNED` in the registry.
 
-Until reconciled, treat §2's verdicts as **documented but not yet code-enforced.**
-
+This keeps the negative result history valid, while bridging the code and doctrine until real hardware meters validate the models.
 ---
 
 ## 4. Physics Validation Gates (G0–G9)

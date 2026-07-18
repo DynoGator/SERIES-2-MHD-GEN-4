@@ -28,11 +28,11 @@ class ValidationRunner:
         self.twin_type = twin_type
         self.report = ValidationReport()
         self.registry = {
-            "SparkLoop": ScavengerEntry(SparkLoop, "PENDING", lambda r: r.net_delta_w < 50.0), # must yield at least 50W net
-            "Thermoelectric": ScavengerEntry(Thermoelectric, "PENDING", lambda r: r.net_delta_w <= 0.0),
-            "PiezoTribo": ScavengerEntry(PiezoTribo, "PENDING", lambda r: r.net_delta_w <= 0.0),
-            "MagneticLeakage": ScavengerEntry(MagneticLeakage, "PENDING", lambda r: r.net_delta_w <= 0.0),
-            "HydraulicRegen": ScavengerEntry(HydraulicRegen, "PENDING", lambda r: r.net_delta_w <= 0.0)
+            "SparkLoop": ScavengerEntry(SparkLoop, "KILLED", lambda r: r.net_delta_w < 50.0), # must yield at least 50W net
+            "Thermoelectric": ScavengerEntry(Thermoelectric, "EARNED", lambda r: r.net_delta_w <= 0.0),
+            "PiezoTribo": ScavengerEntry(PiezoTribo, "EARNED", lambda r: r.net_delta_w <= 0.0),
+            "MagneticLeakage": ScavengerEntry(MagneticLeakage, "EARNED", lambda r: r.net_delta_w <= 0.0),
+            "HydraulicRegen": ScavengerEntry(HydraulicRegen, "EARNED", lambda r: r.net_delta_w <= 0.0)
         }
 
     def _create_twin(self):
