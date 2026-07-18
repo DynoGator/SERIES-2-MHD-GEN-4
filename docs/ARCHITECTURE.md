@@ -163,6 +163,12 @@ The system supports a distributed, multi-node architecture (alpha, beta, gamma n
 - **Correlator (`network/correlator.py`)**: Cross-node geomagnetic event correlation using GPSDO-disciplined arrays and strict tolerance bounds.
 - **Mesh Fallback (`network/mesh.py`)**: Handles ZMQ broker failures with a `BROKERED` → `DEGRADED` → `MESH` fallback state machine. Telemetry propagates over peer gossip if the central broker drops.
 - **Aggregator (`network/aggregator.py`)**: Central aggregator mapping telemetry into the unified DSLV-ZPDI schema.
+- **Transport (`network/transport.py`)**: ZMQ PUSH/PULL/PUB/SUB wrapper handling `inproc://` for tests and `tcp://` for deployment.
+
+### 7.1 Field Telemetry Hardening
+- **Campaign Recorder (`telemetry/campaign_recorder.py`)**: Records timestamped multi-channel telemetry to `JSONL` and `HDF5` aligned with the DSLV-ZPDI schema.
+- **Statistical Detector (`telemetry/statistical_detector.py`)**: Replaces pure mock anomalies with statistical threshold detection (e.g. 5-sigma baseline deviation configured in `detection_thresholds.yaml`).
+- **Campaign Replayer (`telemetry/replay.py`)**: Deterministically streams JSONL records back through the detection and consensus layers to achieve reproducible digests of historical operations.
 
 ---
 
