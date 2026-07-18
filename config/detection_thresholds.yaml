@@ -1,0 +1,21 @@
+channels:
+  geomagnetic_nt:
+    rolling_window: 100
+    sigma_threshold: 5.0
+    min_samples: 100
+  acoustic_db:
+    rolling_window: 100
+    sigma_threshold: 5.0
+    min_samples: 100
+  thermal_c:
+    rolling_window: 100
+    sigma_threshold: 5.0
+    min_samples: 100
+  hall_voltage_mv:
+    rolling_window: 100
+    sigma_threshold: 5.0
+    min_samples: 100
+  gpsdo_lock:
+    rolling_window: 100
+    sigma_threshold: 5.0
+    min_samples: 100
