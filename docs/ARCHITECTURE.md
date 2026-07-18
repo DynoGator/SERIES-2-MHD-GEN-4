@@ -153,5 +153,18 @@ flag. This is the software analog of the physical guillotine.
 
 ---
 
+## 7. Network Layer
+
+The system supports a distributed, multi-node architecture (alpha, beta, gamma nodes) linked via a ZMQ mesh and synchronized by GPSDO timebases.
+
+- **Node Identity (`network/node_identity.py`)**: Resolves site configuration and GPSDO roles.
+- **Events (`network/events.py`)**: Immutable, deterministic anomaly records (hashed `event_id`).
+- **Consensus (`network/consensus.py`)**: 2-of-3 quorum engine. A single node cannot unilaterally declare truth (`SUSPECT`). Quorum must be reached within a 60s sweep window to achieve `CONFIRMED` status, otherwise `REJECTED_UNCORROBORATED`.
+- **Correlator (`network/correlator.py`)**: Cross-node geomagnetic event correlation using GPSDO-disciplined arrays and strict tolerance bounds.
+- **Mesh Fallback (`network/mesh.py`)**: Handles ZMQ broker failures with a `BROKERED` → `DEGRADED` → `MESH` fallback state machine. Telemetry propagates over peer gossip if the central broker drops.
+- **Aggregator (`network/aggregator.py`)**: Central aggregator mapping telemetry into the unified DSLV-ZPDI schema.
+
+---
+
 *Companion documents: `WHITEPAPER.md` (theory), `FALSIFICATION.md` (evidence ledger).*
 *The meter is the master. The repository is the ledger.* 🔧⚡🐊

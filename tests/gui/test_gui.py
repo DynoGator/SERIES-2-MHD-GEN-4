@@ -19,8 +19,8 @@ def test_main_window(qtbot):
     window = MainWindow()
     qtbot.addWidget(window)
     assert window.windowTitle() == "2MHDBMRIPS Digital Twin — GEN-4.0-PRA"
-    # 10 tabs after Phase 9 added the Field Ops tab
-    assert window.tabs.count() == 10
+    # 11 tabs after Phase 10 added the Network tab
+    assert window.tabs.count() == 11
     tab_titles = [window.tabs.tabText(i) for i in range(window.tabs.count())]
     assert "Production" in tab_titles
     window.close()

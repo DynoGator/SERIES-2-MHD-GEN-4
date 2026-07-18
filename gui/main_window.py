@@ -73,6 +73,10 @@ class MainWindow(QMainWindow):
         self.field_ops_panel = FieldOpsPanel()
         self.tabs.addTab(self.field_ops_panel, "Field Ops")
 
+        from gui.widgets.network_panel import NetworkPanel
+        self.network_panel = NetworkPanel()
+        self.tabs.addTab(self.network_panel, "Network")
+
         # Create dummy tabs for Telemetry and Logs to satisfy spec
         self.tabs.addTab(QWidget(), "Telemetry")
         self.tabs.addTab(QWidget(), "Logs")
