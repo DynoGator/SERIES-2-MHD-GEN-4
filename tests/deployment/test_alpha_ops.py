@@ -9,7 +9,7 @@ from scripts.anomaly_detector import AnomalyDetector
 from scripts.field_stress_test import FieldStressTest
 
 def test_alpha_provision_script():
-    res = subprocess.run(["bash", "deployment/alpha_node_provision.sh"], capture_output=True)
+    res = subprocess.run(["bash", "deployment/alpha_node_provision.sh", "--dry-run"], capture_output=True)
     assert b"Provisioning complete" in res.stdout
 
 def test_field_calibration():

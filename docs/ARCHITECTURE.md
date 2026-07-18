@@ -170,6 +170,11 @@ The system supports a distributed, multi-node architecture (alpha, beta, gamma n
 - **Statistical Detector (`telemetry/statistical_detector.py`)**: Replaces pure mock anomalies with statistical threshold detection (e.g. 5-sigma baseline deviation configured in `detection_thresholds.yaml`).
 - **Campaign Replayer (`telemetry/replay.py`)**: Deterministically streams JSONL records back through the detection and consensus layers to achieve reproducible digests of historical operations.
 
+### 7.2 Field Deployment & Node Agent
+- **Node Agent (`node/node_agent.py`)**: The persistent on-node daemon running on field CM5 hardware. Manages GPSDO lock, starts/stops campaign recordings, and heartbeats to the central aggregator over the ZMQ transport.
+- **Deployment Dry-Run (`deployment/alpha_node_provision.sh`)**: The provisioning script is fully dry-run capable (`--dry-run`), ensuring that system modifications (apt, systemd, git clone) can be audited before live execution at the remote site.
+- **GPSDO Gate (`scripts/verify_gpsdo_lock.py`)**: Pre-flight verification that the LBE-1421 GPSDO is locked with an Allan deviation under the required threshold (default `1.0e-9`) before allowing field campaigns to begin.
+
 ---
 
 *Companion documents: `WHITEPAPER.md` (theory), `FALSIFICATION.md` (evidence ledger).*
