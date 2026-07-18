@@ -69,6 +69,10 @@ class MainWindow(QMainWindow):
         self.production_panel = ProductionPanel()
         self.tabs.addTab(self.production_panel, "Production")
 
+        from gui.widgets.field_ops_panel import FieldOpsPanel
+        self.field_ops_panel = FieldOpsPanel()
+        self.tabs.addTab(self.field_ops_panel, "Field Ops")
+
         # Create dummy tabs for Telemetry and Logs to satisfy spec
         self.tabs.addTab(QWidget(), "Telemetry")
         self.tabs.addTab(QWidget(), "Logs")
