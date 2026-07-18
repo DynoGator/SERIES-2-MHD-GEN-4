@@ -10,3 +10,4 @@ PyQt6
 pyqtgraph
 pytest
 pytest-qt
+python-dateutil
