@@ -1,0 +1,9 @@
+node_id: "alpha"
+aggregator_endpoint: "tcp://192.168.1.100:5555" # Example IP for field, use inproc:// for tests
+heartbeat_interval_s: 5.0
+gpsdo:
+  device_path: "/dev/ttyUSB0"
+  allan_dev_max: 1.0e-9
+campaign:
+  duration_s: 3600
+  rate_hz: 10
