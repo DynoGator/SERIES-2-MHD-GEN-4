@@ -26,7 +26,7 @@ def test_stage3_limits_peak_pressure():
     fross = FROSS4(config)
     
     dV_dt = fross.stage3_accumulator_absorption(2e6, 1e6)
-    assert dV_dt > 0
+    assert dV_dt < 0
 
 def test_stage4_triggers_ultimate_protection():
     config = SystemConfig()

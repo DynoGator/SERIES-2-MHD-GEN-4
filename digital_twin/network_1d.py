@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 Level 1 Runner: 1D Network Model
 """
@@ -25,6 +26,8 @@ from control.fpga import FPGAPhaseEngine
 from control.state_machine import TwinStateMachine, TwinState, StateEvent
 
 class Network1DTwin:
+    STATE_WIDTH = 24
+    
     def __init__(self, config: SystemConfig):
         self.config = config
         self.integrator = RK45Integrator()
@@ -77,12 +80,36 @@ class Network1DTwin:
         
         self.fpga.tick(self.control.phase_cmd, fault_latch)
         
+        def event_T_core(t, y):
+            sv = StateVector.from_array(y, has_segments=True)
+            return SAFETY_BOUNDS["T_core"]["max"] - sv.T_core
+            
+        def event_p_vessel(t, y):
+            sv = StateVector.from_array(y, has_segments=True)
+            return SAFETY_BOUNDS["p_vessel"]["max"] - sv.p_vessel
+            
+        def event_omega(t, y):
+            sv = StateVector.from_array(y, has_segments=True)
+            return SAFETY_BOUNDS["omega"]["max"] - sv.omega
+            
+        def event_V_accum(t, y):
+            sv = StateVector.from_array(y, has_segments=True)
+            return sv.V_accum - SAFETY_BOUNDS["V_accum"]["min"]
+
+        events = [event_T_core, event_p_vessel, event_omega, event_V_accum]
+        for e in events:
+            e.terminal = True
+        
         def cur_dydt(t, y):
+            assert len(y) == self.STATE_WIDTH
             sv = StateVector.from_array(y, has_segments=True)
             d_total = {}
             for mod in self.modules:
                 contrib = mod.compute(sv, self.control, self.config)
                 for k, v in contrib.dydt.items():
+                    if not np.isfinite(v):
+                        from physics.base import NonFiniteDerivativeError
+                        raise NonFiniteDerivativeError(f"module={mod.__class__.__name__}, vars={k}")
                     d_total[k] = d_total.get(k, 0.0) + v
                     
             base_dydt = np.array([
@@ -99,9 +126,19 @@ class Network1DTwin:
             return np.concatenate([base_dydt, np.zeros(16, dtype=np.float64)])
             
         t_span = (self.time, self.time + dt)
-        y0 = self.state.to_array()
+        y0 = self.state.to_array(has_segments=True)
         
         sol = self.integrator.solve(t_span, y0, cur_dydt)
+        
+        if not sol.success:
+            from physics.base import IntegrationDivergedError
+            raise IntegrationDivergedError(sol.message)
+            
+        if sol.status == 1:
+            term_state = StateVector.from_array(sol.y[:, -1], has_segments=True)
+            event = check_bounds(term_state)
+            if event:
+                self.state_machine.transition(StateEvent.SAFETY_FAULT)
         
         y_final = sol.y[:, -1]
         self.time = sol.t[-1]
@@ -119,17 +156,23 @@ class Network1DTwin:
             if contrib.dydt or contrib.power_ledger.power_generated_w != 0 or contrib.power_ledger.power_dissipated_w != 0:
                 active_modules.append(mod.__class__.__name__)
                 
+        E_stored = 0.5 * self.config.rotor_moi * base_state.omega**2 + 2.5 * base_state.p_vessel * base_state.V_accum
+        E_stored_prev = 0.5 * self.config.rotor_moi * self.state.omega**2 + 2.5 * self.state.p_vessel * self.state.V_accum
+        dE_dt = (E_stored - E_stored_prev) / (sol.t[-1] - self.time) if sol.t[-1] > self.time else 0.0
+        
+        residual = total_generated - total_dissipated - dE_dt
+        norm_residual = abs(residual) / total_generated if total_generated > 0 else 0.0
+        
         ledger = PowerLedger(
             power_generated_w=total_generated,
             power_dissipated_w=total_dissipated,
-            power_uncertain_w=0.0
+            power_uncertain_w=norm_residual
         )
         self.power_ledgers.append(ledger)
         
         self.state = base_state.evolve(
             segment_currents=self.channel._currents.copy(),
-            segment_voltages=self.channel._voltages.copy(),
-            segment_powers=self.channel._powers.copy()
+            segment_voltages=self.channel._voltages.copy()
         )
 
         event = check_bounds(self.state)
@@ -150,7 +193,7 @@ class Network1DTwin:
             power_ledger_total_w=total_generated - total_dissipated,
             exergy_destroyed_w=total_dissipated,
             segment_currents=self.state.segment_currents.tolist() if self.state.segment_currents is not None else [],
-            segment_powers=self.state.segment_powers.tolist() if self.state.segment_powers is not None else [],
+            segment_powers=self.channel._powers.tolist() if self.channel._powers is not None else [],
             state_machine_state=self.state_machine.current_state.name,
             fpga_phase_lock_ok=self.fpga.phase_lock_ok,
             modal_coherence=modal_coherence,

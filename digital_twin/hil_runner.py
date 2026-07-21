@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 from typing import Tuple, Dict, Any, Optional, Callable, Union
 from core.state_vector import StateVector
 from hardware.fpga_interface import FPGAInterface

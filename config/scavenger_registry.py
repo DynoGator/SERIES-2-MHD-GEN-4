@@ -13,6 +13,6 @@ class ABTestReport:
 @dataclass
 class ScavengerEntry:
     module_class: Type[BaseScavenger]
-    status: Literal["PENDING", "EARNED", "KILLED"]
+    status: Literal["PENDING", "EARNED", "KILLED", "PROVISIONAL"]
     kill_criterion: Callable[[ABTestReport], bool]
     ab_test_history: List[ABTestReport] = field(default_factory=list)

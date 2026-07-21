@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 from typing import Set, Tuple, Any
 from abc import ABC, abstractmethod
 from physics.base import AbstractPhysicsModule

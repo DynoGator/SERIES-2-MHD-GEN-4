@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import numpy as np
 import os
 import subprocess

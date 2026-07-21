@@ -14,7 +14,7 @@
 
 ### Abstract
 
-The 2MHDBMRIPS is a pre-prototype, physics-rigorous digital twin of a modular exergy-cascade MHD conversion platform. Built around the **Doctrine of Complete Asset Inversion + Gradient Harvesting**, the system treats all parasitic losses as scavenged assets awaiting proper routing. Every physics claim survives A/B testing with quantitative falsification gates. The meter receives credit only when the meters agree.
+The 2MHDBMRIPS suite is currently a **structural harness** and integration topology. It is **>90% scaffolding and PLACEHOLDER-PHYSICS**, pending external CFD and experimental data to flesh out the models. It serves to test the control topology, state tracking, and integration pathways (the "Doctrine of Complete Asset Inversion + Gradient Harvesting"), but the actual physical results it computes today are unanchored placeholders. The meter receives credit only when the meters agree, and right now, the meters are placeholders.
 
 ---
 
@@ -75,9 +75,9 @@ python scripts/run_distributed_node.py --site penrose_co --duration 10.0
 
 | Level | Status | Description |
 |-------|--------|-------------|
-| TRL 2–3 | ✅ | System concept validated via digital twin |
-| TRL 3–7 | ✅ | Subsystems: MHD, thermo, EM, acoustic, FPGA |
-| TRL 4 | 🟡 | HIL bench validation (Phase 6 complete) |
+| TRL 2–3 | 🟡 | Integration harness & control topology built |
+| TRL 3–7 | ⬜ | Subsystems awaiting CFD/experimental anchoring |
+| TRL 4 | ⬜ | HIL bench validation (scaffolding complete) |
 | TRL 5 | ⬜ | Relevant environment (field deployment queued) |
 
 ---

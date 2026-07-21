@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 from typing import Tuple, Any
 from physics.scavengers.base import BaseScavenger
 from physics.base import DerivativeContribution, PowerLedger, ControlVector

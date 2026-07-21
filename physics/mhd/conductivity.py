@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import numpy as np
 from typing import Set, Any
 from physics.base import AbstractPhysicsModule, DerivativeContribution, PowerLedger
@@ -56,8 +57,18 @@ class PlasmaConductivity(AbstractPhysicsModule):
         n_e = (-K + np.sqrt(K**2 + 4 * K * n_s)) / 2.0
         return n_e
 
+    def sigma_from_saha(self, T: float, p: float, x_seed: float, nu_c: float = 1e11) -> float:
+        """
+        # STATUS: PROVISIONAL
+        Real MHD conductivity path using Saha electron density.
+        nu_c = electron-neutral collision frequency (PROVISIONAL default).
+        """
+        n_e = self.saha_n_e(T, p, x_seed)
+        return (n_e * self.e**2) / (self.m_e * nu_c)
+
     def sigma(self, T: float, p: float, x_seed: float) -> float:
         """
+        # STATUS: PLACEHOLDER-PHYSICS
         Simplified piecewise fallback (primary for lumped model).
         σ_eff(T) = { 1e-5                    if T < 3000 K
                    { min(1.5e-3 * T^1.5, 20000)  if T ≥ 3000 K

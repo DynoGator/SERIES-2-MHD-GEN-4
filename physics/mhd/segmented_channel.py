@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 1D Segmented Faraday Channel
 """

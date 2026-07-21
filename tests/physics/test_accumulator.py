@@ -18,7 +18,7 @@ def test_pressure_relaxation():
     acc = FROSSAccumulator({})
     # If p_vessel > p_accum, dV_dt > 0, so accumulator volume increases
     p_accum = acc.pressure(0.2)
-    dV = acc.dV_dt(p_vessel=p_accum*1.1, p_accum=p_accum, A_piston=0.1, m_eff=10.0)
+    dV = acc.dV_dt(p_vessel=p_accum*1.1, p_accum=p_accum)
     assert dV > 0
 
 def test_volume_clamping():

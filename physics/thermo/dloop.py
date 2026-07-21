@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import math
 from typing import Set
 from physics.base import AbstractPhysicsModule, DerivativeContribution, ControlVector, PowerLedger

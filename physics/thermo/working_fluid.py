@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import numpy as np
 from typing import Set, Any
 from dataclasses import dataclass

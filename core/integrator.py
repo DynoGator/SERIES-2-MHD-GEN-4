@@ -5,11 +5,15 @@ from scipy.integrate import solve_ivp
 
 class OdeResult:
     def __init__(self, t: np.ndarray, y: np.ndarray, 
-                 t_events: Optional[List] = None, sol=None):
+                 t_events: Optional[List] = None, sol=None,
+                 success: bool = True, status: int = 0, message: str = ""):
         self.t = t
         self.y = y
         self.t_events = t_events
         self.sol = sol
+        self.success = success
+        self.status = status
+        self.message = message
 
 class Integrator(ABC):
     @abstractmethod
@@ -52,6 +56,9 @@ class RK45Integrator(Integrator):
             y=sol.y,
             t_events=sol.t_events,
             sol=sol.sol,
+            success=sol.success,
+            status=sol.status,
+            message=sol.message
         )
     
     def interpolate(self, sol: OdeResult, t_new: np.ndarray) -> np.ndarray:

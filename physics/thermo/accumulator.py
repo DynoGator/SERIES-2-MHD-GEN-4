@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import numpy as np
 from typing import Set, Any
 from physics.base import AbstractPhysicsModule, DerivativeContribution, PowerLedger
@@ -27,9 +28,11 @@ class FROSSAccumulator(AbstractPhysicsModule):
         P0 = self.pressure(V0)
         return (P0 * V0 / (self.n - 1.0)) * (1.0 - (V0 / V1)**(self.n - 1.0)) * self.eta_hydro
 
-    def dV_dt(self, p_vessel: float, p_accum: float, A_piston: float, m_eff: float) -> float:
-        # Simplified dynamics based on pressure difference
-        return (p_vessel - p_accum) * A_piston / m_eff
+    def dV_dt(self, p_vessel: float, p_accum: float, C_v: float = 1e-6) -> float:
+        # Corrected sign and units.
+        # If p_accum > p_vessel, gas expands (V_accum INCREASES).
+        # C_v is the hydraulic conductance in m^3 / (s * Pa).
+        return (p_accum - p_vessel) * C_v
 
     def dp_vessel_dt(self, p_target: float, p_vessel: float) -> float:
         return self.k_stiffness * (p_target - p_vessel)
@@ -56,7 +59,21 @@ class FROSSAccumulator(AbstractPhysicsModule):
         p_target = m_gas * props.R_specific * state.T_core / V_plasma
         
         dp_dt = self.k_stiffness * (p_target - state.p_vessel)
-        dV_dt = self.dV_dt(state.p_vessel, p_accum, A_piston, m_eff)
+        # dV_accum/dt using hydraulic conductance C_v
+        C_v = 1e-6
+        dV_dt = self.dV_dt(state.p_vessel, p_accum, C_v)
+        
+        # Add a compressor/recharge term to prevent total depletion
+        # If V_accum is too large, it means gas has expanded too much. The compressor 
+        # pumps fluid back into the accumulator (compressing the gas, reducing V_accum).
+        # We can simulate this with a small proportional refill term.
+        refill_rate = 0.0
+        if state.V_accum > self.V_pre:
+            refill_rate = -1e-4 * (state.V_accum - self.V_pre)
+        elif state.V_accum < 0.05:
+            refill_rate = 1e-4 * (0.05 - state.V_accum)
+            
+        dV_dt += refill_rate
         
         # Power recovered or used? 
         # For a lumped model step, we can just say W_rec = p_accum * dV_dt

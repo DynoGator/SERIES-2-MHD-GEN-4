@@ -2,17 +2,23 @@ import math
 from typing import Dict, Tuple, Any, Optional, Union
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from enum import Enum, auto
 from digital_twin.lumped_model import LumpedDigitalTwin
 from digital_twin.network_1d import Network1DTwin
+
+class Verdict(Enum):
+    PASS = auto()
+    FAIL = auto()
+    INDETERMINATE = auto()
 
 @dataclass
 class GateResult:
     gate_id: str
-    passed: bool
+    verdict: Verdict
     measured_values: Dict[str, float]
     tolerance_checks: Dict[str, bool]
     raw_data_path: str
-    failure_reason: Optional[str]
+    reason: Optional[str]
 
 class ValidationGate(ABC):
     def __init__(self, config: Any):
@@ -28,87 +34,73 @@ class ValidationGate(ABC):
 
 class Gate0_EnergyAccounting(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        twin.run(0.1) # Execute shortly
-        
-        # We need to simulate the heater/energy accounting.
-        # We will assume a mocked metric of energy closure
-        # Let's calculate the total ledger
-        total_gen = sum([l.power_generated_w for l in twin.power_ledgers])
-        total_diss = sum([l.power_dissipated_w for l in twin.power_ledgers])
-        
-        # G0 specifically tests if the unmeasured loss is <5%.
-        imbalance = 0.0 # By default, 0% if nothing is missing
-        if hasattr(twin, '_injected_loss'):
-            imbalance = twin._injected_loss
-            
+        twin.run(0.1)
+        if not twin.power_ledgers:
+            return GateResult("G0", Verdict.INDETERMINATE, {}, {}, "", "power_ledgers not provided by twin")
+        imbalance = twin.power_ledgers[-1].power_uncertain_w
+        if not math.isfinite(imbalance):
+            return GateResult("G0", Verdict.INDETERMINATE, {}, {}, "", "imbalance not finite")
         passed = (imbalance < 0.05)
-        
-        return GateResult(
-            gate_id="G0",
-            passed=passed,
-            measured_values={"imbalance": imbalance},
-            tolerance_checks={"imbalance_less_than_0.05": passed},
-            raw_data_path="outputs/g0.jsonl",
-            failure_reason="Energy imbalance > 5%" if not passed else None
-        )
-
-    def criteria(self) -> Dict[str, Tuple[float, float]]:
-        return {"imbalance": (0.0, 0.05)}
+        return GateResult("G0", Verdict.PASS if passed else Verdict.FAIL, {"imbalance": imbalance}, {"imbalance_less_than_0.05": passed}, "outputs/g0.jsonl", "Energy imbalance > 5%" if not passed else None)
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"imbalance": (0.0, 0.05)}
 
 class Gate1_ColdFlow(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G1", True, {"compressor_map": 0.0}, {"compressor_map": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G1", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"compressor_map": (0.0, 1.0)}
 
 class Gate2_AcousticControl(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G2", True, {"mode_db": 12.0}, {"mode_db": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G2", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"mode_db": (0.0, 12.0)}
 
 class Gate3_FROSS4Transient(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
         if getattr(twin, "fross", None):
-            # Inject pulse
             p_pulse = getattr(twin.fross, 'injected_pulse', 0.0)
             twin.fross.injected_pulse = p_pulse
         twin.run(0.1)
         max_p = twin.state.p_vessel
         passed = (max_p < 0.9 * self.config.max_pressure_vessel)
-        return GateResult("G3", passed, {"max_p": max_p}, {"p_vessel_limit": passed}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G3", Verdict.PASS if passed else Verdict.FAIL, {"max_p": max_p}, {"p_vessel_limit": passed}, "", "Pressure exceeded limit" if not passed else None)
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"max_p": (0.0, 0.9 * self.config.max_pressure_vessel)}
 
 class Gate4_MaterialQualification(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G4", True, {"recession": 0.0}, {"recession": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G4", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"recession": (0.0, 0.1)}
 
 class Gate5_FirstPlasma(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G5", True, {"ignition": 1.0}, {"ignition": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G5", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"ignition": (1.0, 1.0)}
 
 class Gate6_MHDExtraction(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G6", True, {"sigma_scaling": 1.0}, {"sigma_scaling": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G6", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"sigma_scaling": (1.0, 1.0)}
 
 class Gate7_PSMICValidation(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G7", True, {"instability_reduced": 0.6}, {"instability_reduced": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G7", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"instability_reduced": (0.6, 1.0)}
 
 class Gate8_EnergyClosure(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
         twin.run(0.1)
-        imbalance = getattr(twin, '_energy_imbalance', 0.0)
+        if not twin.power_ledgers:
+            return GateResult("G8", Verdict.INDETERMINATE, {}, {}, "", "energy_imbalance not provided by twin")
+        imbalance = twin.power_ledgers[-1].power_uncertain_w
+        if not math.isfinite(imbalance):
+            return GateResult("G8", Verdict.INDETERMINATE, {}, {}, "", "imbalance not finite")
         passed = (imbalance < 0.05)
-        return GateResult("G8", passed, {"imbalance": imbalance}, {"closure_limit": passed}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G8", Verdict.PASS if passed else Verdict.FAIL, {"imbalance": imbalance}, {"closure_limit": passed}, "", "Closure error > 5%" if not passed else None)
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"imbalance": (0.0, 0.05)}
 
 class Gate9_Endurance(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        return GateResult("G9", True, {"drift": 0.02}, {"drift": True}, "", None)
-    def criteria(self) -> Dict[str, Tuple[float, float]]: return {}
+        return GateResult("G9", Verdict.INDETERMINATE, {}, {}, "", "metric not yet wired")
+    def criteria(self) -> Dict[str, Tuple[float, float]]: return {"drift": (0.0, 0.02)}
 
 ALL_GATES = [
     Gate0_EnergyAccounting, Gate1_ColdFlow, Gate2_AcousticControl,

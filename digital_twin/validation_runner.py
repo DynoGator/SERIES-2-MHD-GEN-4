@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import time
 from typing import List, Optional, Any
 from datetime import datetime
@@ -28,11 +29,11 @@ class ValidationRunner:
         self.twin_type = twin_type
         self.report = ValidationReport()
         self.registry = {
-            "SparkLoop": ScavengerEntry(SparkLoop, "KILLED", lambda r: r.net_delta_w < 50.0), # must yield at least 50W net
-            "Thermoelectric": ScavengerEntry(Thermoelectric, "EARNED", lambda r: r.net_delta_w <= 0.0),
-            "PiezoTribo": ScavengerEntry(PiezoTribo, "EARNED", lambda r: r.net_delta_w <= 0.0),
-            "MagneticLeakage": ScavengerEntry(MagneticLeakage, "EARNED", lambda r: r.net_delta_w <= 0.0),
-            "HydraulicRegen": ScavengerEntry(HydraulicRegen, "EARNED", lambda r: r.net_delta_w <= 0.0)
+            "SparkLoop": ScavengerEntry(SparkLoop, "PROVISIONAL", lambda r: r.net_delta_w < 50.0),
+            "Thermoelectric": ScavengerEntry(Thermoelectric, "PROVISIONAL", lambda r: r.net_delta_w <= 0.0),
+            "PiezoTribo": ScavengerEntry(PiezoTribo, "PROVISIONAL", lambda r: r.net_delta_w <= 0.0),
+            "MagneticLeakage": ScavengerEntry(MagneticLeakage, "PROVISIONAL", lambda r: r.net_delta_w <= 0.0),
+            "HydraulicRegen": ScavengerEntry(HydraulicRegen, "PROVISIONAL", lambda r: r.net_delta_w <= 0.0)
         }
 
     def _create_twin(self):
@@ -61,11 +62,11 @@ class ValidationRunner:
             res = gate_instance.execute(twin)
             self.report.gate_results.append(res)
             
-        # Exergy calc
-        self.report.exergy_source = 10000.0
-        self.report.net_work = 3600.0
-        self.report.efficiency_ii = self.report.net_work / self.report.exergy_source
-        self.report.destroyed_exergy = {"Plasma": 2000.0, "Thermal": 1000.0}
+        # Exergy calc (Missing real inputs, so PLACEHOLDER)
+        self.report.exergy_source = None
+        self.report.net_work = None
+        self.report.efficiency_ii = None
+        self.report.destroyed_exergy = None
         
         return self.report
 
@@ -73,15 +74,23 @@ class ValidationRunner:
         entry = self.registry[scavenger_name]
         
         twin_with = self._create_twin()
-        scav_module = [m for m in twin_with.modules if isinstance(m, entry.module_class)][0]
-        
-        # Simulated run
+        for m in twin_with.modules:
+            if isinstance(m, entry.module_class):
+                m.is_enabled = True
         twin_with.run(0.1)
-        with_w, without_w = scav_module.ab_test(twin_with, 0.1)
+        with_w = sum(l.power_generated_w - l.power_dissipated_w for l in twin_with.power_ledgers) / max(len(twin_with.power_ledgers), 1)
+        
+        twin_without = self._create_twin()
+        for m in twin_without.modules:
+            if isinstance(m, entry.module_class):
+                m.kill("AB Test baseline")
+        twin_without.run(0.1)
+        without_w = sum(l.power_generated_w - l.power_dissipated_w for l in twin_without.power_ledgers) / max(len(twin_without.power_ledgers), 1)
+        
         net_delta = with_w - without_w
         
         killed = entry.kill_criterion(ABTestReport(scavenger_name, with_w, without_w, net_delta, ""))
-        status = "KILLED" if killed else "EARNED"
+        status = "KILLED" if killed else "PROVISIONAL"
         entry.status = status
         
         rep = ABTestReport(scavenger_name, with_w, without_w, net_delta, status)
@@ -98,10 +107,10 @@ class ValidationRunner:
         md += "| Gate | Status | Measured | Tolerance | Notes |\n"
         md += "|------|--------|----------|-----------|-------|\n"
         for res in self.report.gate_results:
-            status = "PASS" if res.passed else "FAIL"
+            status = res.verdict.name
             meas = str(res.measured_values)
             tol = str(res.tolerance_checks)
-            notes = res.failure_reason if res.failure_reason else "OK"
+            notes = res.reason if res.reason else "OK"
             md += f"| {res.gate_id} | {status} | {meas} | {tol} | {notes} |\n"
             
         md += "\n## Scavenger A/B Tests\n"
@@ -111,9 +120,14 @@ class ValidationRunner:
             md += f"| {r.scavenger_name} | {r.with_w} | {r.without_w} | {r.net_delta_w} | {r.status} |\n"
             
         md += "\n## Exergy Summary\n"
-        md += f"- Source exergy: {self.report.exergy_source / 1000.0} kW\n"
-        md += f"- Net work output: {self.report.net_work / 1000.0} kW\n"
-        md += f"- Second-law efficiency: {self.report.efficiency_ii * 100.0:.1f}%\n"
-        md += f"- Destroyed exergy by domain: {self.report.destroyed_exergy}\n"
+        src = f"{self.report.exergy_source / 1000.0} kW" if self.report.exergy_source is not None else "PLACEHOLDER"
+        net = f"{self.report.net_work / 1000.0} kW" if self.report.net_work is not None else "PLACEHOLDER"
+        eff = f"{self.report.efficiency_ii * 100.0:.1f}%" if self.report.efficiency_ii is not None else "— (PLACEHOLDER)"
+        des = str(self.report.destroyed_exergy) if self.report.destroyed_exergy is not None else "PLACEHOLDER"
+        
+        md += f"- Source exergy: {src}\n"
+        md += f"- Net work output: {net}\n"
+        md += f"- Second-law efficiency: {eff}\n"
+        md += f"- Destroyed exergy by domain: {des}\n"
         
         return md
