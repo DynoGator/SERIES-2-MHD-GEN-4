@@ -2,26 +2,40 @@ import pytest
 import os
 from physics.mhd.conductivity import PlasmaConductivity
 
-def test_insulator_regime():
-    cond = PlasmaConductivity('K', {})
-    assert cond.sigma(500.0, 1e5, 0.05) == 1e-5
+def load_anchors():
+    anchors = []
+    filepath = os.path.join(os.path.dirname(__file__), '../../data/reference/conductivity_anchors.md')
+    with open(filepath, 'r') as f:
+        in_table = False
+        for line in f:
+            if "|-" in line:
+                in_table = True
+                continue
+            if in_table and line.startswith("|"):
+                parts = [p.strip() for p in line.split("|")]
+                if len(parts) >= 6:
+                    T = float(parts[1])
+                    x_seed = float(parts[2])
+                    p = float(parts[3])
+                    sigma_ref = float(parts[4])
+                    tol = float(parts[5]) / 100.0
+                    anchors.append((T, x_seed, p, sigma_ref, tol))
+    return anchors
 
-def test_ionization_threshold():
+@pytest.mark.parametrize("T, x_seed, p, sigma_ref, tol", load_anchors())
+def test_sigma_against_reference(T, x_seed, p, sigma_ref, tol):
     cond = PlasmaConductivity('K', {})
-    assert cond.sigma(2999.0, 1e5, 0.05) == 1e-5
-    assert cond.sigma(3000.0, 1e5, 0.05) > 100.0
-
-def test_cesium_higher_than_potassium():
-    cond_k = PlasmaConductivity('K', {})
-    cond_cs = PlasmaConductivity('Cs', {})
-    assert cond_cs.sigma(3500.0, 1e5, 0.05) > cond_k.sigma(3500.0, 1e5, 0.05)
-
-def test_marzouk_regression():
-    # Only test if file exists, or mock it since it's just regression
-    cond = PlasmaConductivity('K', {})
-    # For T=3000, sigma is around 1.5e-3 * 3000^1.5 = 246.47
-    assert abs(cond.sigma(3000.0, 1e5, 0.01) - 246.47) < 246.47 * 0.25
-
-def test_saturation_cap():
-    cond = PlasmaConductivity('K', {})
-    assert cond.sigma(10000.0, 1e5, 0.05) <= 20000.0
+    
+    # Test provisional physics
+    sigma_provisional = cond.sigma_from_saha(T, p, x_seed)
+    # The provisional physics using Saha might not match Sutton & Sherman perfectly
+    # because it lacks actual collision cross-sections. But we will let it fail or pass.
+    
+    # Test placeholder physics
+    sigma_placeholder = cond.sigma(T, p, x_seed)
+    
+    # We assert that the placeholder matches the literature reference.
+    # This WILL fail since it's a placeholder. 
+    # Green is only meaningful once gates can go red.
+    err = abs(sigma_placeholder - sigma_ref) / sigma_ref
+    assert err <= tol, f"PLACEHOLDER sigma={sigma_placeholder} failed to match anchor {sigma_ref} within {tol*100}%"

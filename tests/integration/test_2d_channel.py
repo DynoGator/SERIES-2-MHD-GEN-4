@@ -1,3 +1,5 @@
+from physics.base import NonPhysicalStateError
+import pytest
 import pytest
 import numpy as np
 from digital_twin.channel_2d import Channel2DTwin

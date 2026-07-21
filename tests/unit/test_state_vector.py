@@ -5,7 +5,7 @@ from core.state_vector import StateVector
 
 def test_immutability():
     state = StateVector(theta=0.0, omega=10.0, T_core=1000.0, p_vessel=1e5, V_accum=0.1)
-    with pytest.raises(Exception): # Pydantic ValidationError or TypeError
+    with pytest.raises(ValidationError): # Pydantic ValidationError
         state.theta = 1.0
 
 def test_array_round_trip():
@@ -14,8 +14,8 @@ def test_array_round_trip():
         p_vessel=2e5, V_accum=0.5, m_seed=0.1,
         T_electron=500.0, coherence_r=0.9
     )
-    arr = state.to_array()
-    assert len(arr) == 24 # 8 core + 8 currents + 8 voltages
+    arr = state.to_array(has_segments=False)
+    assert len(arr) == 8 # 8 core state vars
     
     new_state = StateVector.from_array(arr, has_segments=False)
     assert new_state.theta == 1.0
