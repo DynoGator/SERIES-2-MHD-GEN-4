@@ -20,7 +20,7 @@ class StateVector(BaseModel):
     omega: float = Field(..., description="Rotor angular velocity [rad/s]")
     T_core: float = Field(..., gt=0.0, description="Plasma core temperature [K]")
     p_vessel: float = Field(..., gt=0.0, description="Vessel pressure [Pa]")
-    V_accum: float = Field(..., gt=0.0, description="Accumulator gas volume [m³]")
+    V_accum: float = Field(..., description="Accumulator gas volume [m³]")
     
     # ─── 1D Extension Points ───
     segment_currents: Optional[np.ndarray] = Field(None, description="8-segment currents [A]")
@@ -82,8 +82,6 @@ class StateVector(BaseModel):
             return "T_core<=0"
         if arr[3] <= 0.0:
             return "p_vessel<=0"
-        if arr[4] <= 0.0:
-            return "V_accum<=0"
         return None
 
     @classmethod

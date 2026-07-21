@@ -11,6 +11,7 @@ from physics.thermo.accumulator import FROSSAccumulator
 class FROSS4(AbstractPhysicsModule):
     def __init__(self, config: SystemConfig):
         self.config = config
+        self.injected_pulse = 0.0
         self.k_diaphragm = 1e5
         self.mawp = config.max_pressure_vessel
         self.accumulator = FROSSAccumulator(config)
@@ -24,7 +25,7 @@ class FROSS4(AbstractPhysicsModule):
     def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         p_target = config.gas_mass * config.r_specific * state.T_core / config.plasma_vol
         
-        p_pulse = getattr(self, 'injected_pulse', 0.0)
+        p_pulse = self.injected_pulse
         p_stage2 = state.p_vessel - self.stage1_acoustic_response(p_pulse)
         
         x_diaph = self.stage2_diaphragm_displacement(p_stage2)

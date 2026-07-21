@@ -12,6 +12,7 @@ def test_no_self_clear():
         bound_violated="T_core",
         value=4000.0,
         limit=3695.0,
+            reason="ELECTRODE_MELTDOWN",
         state_snapshot=state
     )
     sm.process_event(ev)
@@ -31,6 +32,7 @@ def test_two_step_reset():
         bound_violated="T_core",
         value=4000.0,
         limit=3695.0,
+            reason="ELECTRODE_MELTDOWN",
         state_snapshot=state
     )
     sm.process_event(ev)
@@ -49,6 +51,7 @@ def test_history_logged():
         bound_violated="V_accum",
         value=1e-7,
         limit=1e-6,
+            reason="ACCUMULATOR_NEAR_EMPTY",
         state_snapshot=state
     )
     ev2 = SafetyEvent(
@@ -57,6 +60,7 @@ def test_history_logged():
         bound_violated="T_core",
         value=4000.0,
         limit=3695.0,
+            reason="ELECTRODE_MELTDOWN",
         state_snapshot=state
     )
     sm.process_event(ev1)

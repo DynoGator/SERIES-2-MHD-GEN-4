@@ -6,8 +6,8 @@ from physics.base import AbstractPhysicsModule, DerivativeContribution, PowerLed
 class FaradayChannel(AbstractPhysicsModule):
     def __init__(self, config: Any):
         self.config = config
-        self.C_d = getattr(config, 'C_d', 0.3)
-        self.V_MHD = getattr(config, 'plasma_vol', 0.05) # Volume in m^3
+        self.C_d = config.C_d
+        self.V_MHD = config.plasma_vol # Volume in m^3
         from physics.mhd.conductivity import PlasmaConductivity
         from physics.electromagnetic.stator import DICASHybridStator
         self.cond = PlasmaConductivity('K', config)
@@ -34,7 +34,7 @@ class FaradayChannel(AbstractPhysicsModule):
     def compute(self, state, control, config) -> DerivativeContribution:
         M_carrier = 0.039948 # Argon kg/mol
         M_seed = 0.0390983 # Potassium kg/mol
-        carrier_mass = getattr(config, 'gas_mass', 0.1)
+        carrier_mass = config.gas_mass
         carrier_moles = carrier_mass / M_carrier
         seed_moles = state.m_seed / M_seed
         x_seed = seed_moles / (carrier_moles + seed_moles) if (carrier_moles + seed_moles) > 0 else 0.0
@@ -43,8 +43,8 @@ class FaradayChannel(AbstractPhysicsModule):
         kappa = self.stator.psmic_modulation(control.phi_psmic)
         B_eff = self.stator.effective_b_field(control.B_max, kappa)
         
-        r_eff = getattr(config, 'R_torus', 0.5)
-        L_eff = getattr(config, 'a_minor', 0.1) * 2.0
+        r_eff = config.R_torus
+        L_eff = config.a_minor * 2.0
         u_plasma = state.omega * r_eff
         
         # Ideal power
@@ -54,7 +54,7 @@ class FaradayChannel(AbstractPhysicsModule):
         # We need torque. P_gross = tau_em * omega
         tau_em = P_gross / state.omega if state.omega > 1e-3 else 0.0
         
-        J = getattr(config, 'rotor_moi', 0.5)
+        J = config.rotor_moi
         domega = -tau_em / J
         
         return DerivativeContribution(

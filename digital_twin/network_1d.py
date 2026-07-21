@@ -24,6 +24,7 @@ from physics.thermo.seed_loop import SeedLoop
 
 from control.fpga import FPGAPhaseEngine
 from control.state_machine import TwinStateMachine, TwinState, StateEvent
+from core.safety_machine import SafetyMachine, SafetyState
 
 class Network1DTwin:
     STATE_WIDTH = 24
@@ -34,6 +35,7 @@ class Network1DTwin:
         self.telemetry = TelemetryRingBuffer()
         
         self.state_machine = TwinStateMachine(config)
+        self.safety_machine = SafetyMachine()
         self.fpga = FPGAPhaseEngine(config)
         
         self.channel = SegmentedFaradayChannel(8, config)
@@ -177,6 +179,7 @@ class Network1DTwin:
 
         event = check_bounds(self.state)
         if event:
+            self.safety_machine.process_event(event)
             self.state_machine.transition(StateEvent.SAFETY_FAULT)
             
         modal_coherence = 1.0
@@ -187,7 +190,7 @@ class Network1DTwin:
             state_vector=self.state.model_dump(),
             control_inputs={},
             power_terms=ledger.__dict__,
-            safety_state=self.state_machine.current_state.name,
+            safety_state=self.safety_machine.state.name,
             rng_seed=42,
             physics_modules_active=active_modules,
             power_ledger_total_w=total_generated - total_dissipated,
@@ -207,6 +210,6 @@ class Network1DTwin:
         steps = int(t_end / dt)
         for _ in range(steps):
             self.step(dt)
-            if self.state_machine.current_state == TwinState.FAULT_LATCH:
+            if self.safety_machine.state in (SafetyState.FAULT_LATCH, SafetyState.WARNING):
                 break
         return self.telemetry

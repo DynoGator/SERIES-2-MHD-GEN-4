@@ -6,9 +6,9 @@ from physics.base import AbstractPhysicsModule, DerivativeContribution, PowerLed
 class HeatTransfer(AbstractPhysicsModule):
     def __init__(self, config: Any):
         self.config = config
-        self.h_base = getattr(config, 'h_base', 500.0)
+        self.h_base = config.h_xfer_base
         self.p_atm = 101325.0
-        self.omega_ref = getattr(config, 'omega_ref', 100.0)
+        self.omega_ref = config.omega_ref
 
     def required_state_vars(self) -> Set[str]:
         return {"T_core", "p_vessel", "omega"}
@@ -25,11 +25,11 @@ class HeatTransfer(AbstractPhysicsModule):
         return Nu0 * (1.0 + C * np.sqrt(term))
 
     def compute(self, state, control, config) -> DerivativeContribution:
-        T_coolant = getattr(config, 'coolant_temp', 300.0)
+        T_coolant = config.coolant_temp
         h = self.h_dynamic(state.p_vessel, state.omega, state.T_core, T_coolant)
         
         # Nu_Coriolis enhancement could be used if Nu0 is known, but we'll stick to h_dynamic here.
-        A_vessel = getattr(config, 'vessel_area', 2.0)
+        A_vessel = config.vessel_area
         Q_cooling = h * A_vessel * (state.T_core - T_coolant)
         
         # dT_core / dt = -Q_cooling / (m_gas * cv)
@@ -37,7 +37,7 @@ class HeatTransfer(AbstractPhysicsModule):
         fluid = WorkingFluid('B', config)
         props = fluid.properties(state.T_core, state.p_vessel)
         
-        m_gas = getattr(config, 'gas_mass', 0.1)
+        m_gas = config.gas_mass
         dT_dt = -Q_cooling / (m_gas * props.cv)
         
         return DerivativeContribution(

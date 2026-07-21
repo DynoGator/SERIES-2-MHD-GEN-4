@@ -12,6 +12,12 @@ class SystemConfig(BaseModel):
     vessel_area: float = Field(default=2.0, description="Vessel surface area (m^2)")
     R_torus: float = Field(default=0.5, description="Major radius of torus (m)")
     a_minor: float = Field(default=0.1, description="Minor radius of torus (m)")
+    rotor_mass: float = Field(default=10.0, description="Rotor mass (kg) # PROVISIONAL")
+    rotor_radius: float = Field(default=0.5, description="Rotor radius (m) # PROVISIONAL")
+    channel_length: float = Field(default=1.0, description="Faraday channel length (m) # PROVISIONAL")
+    channel_width: float = Field(default=0.1, description="Faraday channel width (m) # PROVISIONAL")
+    channel_height: float = Field(default=0.1, description="Faraday channel height (m) # PROVISIONAL")
+    C_d: float = Field(default=0.3, description="Discharge coefficient # PROVISIONAL")
     
     # Electromagnetic
     B_max: float = Field(default=2.0, description="Maximum magnetic flux density (T)")
@@ -24,8 +30,13 @@ class SystemConfig(BaseModel):
     p_init: float = Field(default=100000.0, description="Initial pressure (Pa)")
     accum_vol: float = Field(default=0.1, description="Accumulator volume (m^3)")
     accum_precharge: float = Field(default=50000.0, description="Accumulator precharge pressure (Pa)")
+    eta_hydro: float = Field(default=0.8, description="Hydraulic efficiency # PROVISIONAL")
+    k_stiffness: float = Field(default=10.0, description="Stiffness for dp/dt # PROVISIONAL")
+    hydraulic_conductance: float = Field(default=1e-6, description="Hydraulic conductance C_v (m^3/s*Pa) # PROVISIONAL")
     coolant_temp: float = Field(default=300.0, description="Coolant temperature (K)")
     h_xfer_base: float = Field(default=500.0, description="Base heat transfer coefficient (W/m^2*K)")
+    compression_ratio: float = Field(default=12.0, description="Compression ratio # PROVISIONAL")
+    omega_ref: float = Field(default=100.0, description="Reference angular velocity # PROVISIONAL")
     
     # Gas
     gas_mass: float = Field(default=0.1, description="Total gas mass (kg)")

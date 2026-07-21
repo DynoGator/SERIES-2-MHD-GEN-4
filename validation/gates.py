@@ -25,12 +25,14 @@ class ValidationGate(ABC):
         self.config = config
 
     def _run_twin_safely(self, twin: Union[LumpedDigitalTwin, Network1DTwin], dt: float, gate_id: str) -> Optional[GateResult]:
-        from physics.base import IntegrationDivergedError
+        from physics.base import IntegrationDivergedError, NonPhysicalStateError
         try:
             twin.run(dt)
             return None
         except IntegrationDivergedError as e:
             return GateResult(gate_id, Verdict.INDETERMINATE, {}, {}, "", f"Integration Diverged: {str(e)}")
+        except NonPhysicalStateError as e:
+            return GateResult(gate_id, Verdict.INDETERMINATE, {}, {}, "", f"Non-physical state during run: {str(e)}")
 
     @abstractmethod
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
@@ -66,7 +68,7 @@ class Gate2_AcousticControl(ValidationGate):
 class Gate3_FROSS4Transient(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
         if getattr(twin, "fross", None):
-            p_pulse = getattr(twin.fross, 'injected_pulse', 0.0)
+            p_pulse = twin.fross.injected_pulse if getattr(twin, 'fross', None) and hasattr(twin.fross, 'injected_pulse') else 0.0
             twin.fross.injected_pulse = p_pulse
         err_res = self._run_twin_safely(twin, 0.1, "G3")
         if err_res: return err_res

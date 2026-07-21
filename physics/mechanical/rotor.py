@@ -21,8 +21,8 @@ class RotorDynamics(AbstractPhysicsModule):
         return (1.0 / J) * (tau_drive - tau_em - tau_fric)
 
     def compute(self, state, control, config) -> DerivativeContribution:
-        J = getattr(config, 'rotor_moi', 0.5)
-        tau_drive = getattr(control, 'tau_drive', 0.0)
+        J = config.rotor_moi
+        tau_drive = control.tau_drive
         # Note: tau_em could be computed here, or by LorentzForce. For lumped model, we assume tau_em is passed or we just use 0 here, and LorentzForce subtracts it.
         # But wait, alpha is (tau_drive - tau_em - tau_fric)/J. We will just compute the tau_drive - tau_fric part here.
         tau_fric = self.friction_torque(state.omega)

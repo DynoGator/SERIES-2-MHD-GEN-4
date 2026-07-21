@@ -35,7 +35,7 @@ def test_segment_array_round_trip():
         segment_currents=np.ones(8),
         segment_voltages=np.full(8, 2.0)
     )
-    arr = state.to_array()
+    arr = state.to_array(has_segments=True)
     new_state = StateVector.from_array(arr, has_segments=True)
     assert new_state.segment_currents is not None
     assert np.allclose(new_state.segment_currents, np.ones(8))
