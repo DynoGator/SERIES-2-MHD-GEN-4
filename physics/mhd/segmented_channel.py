@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 1D Segmented Faraday Channel
 """
@@ -14,7 +15,7 @@ class SegmentedFaradayChannel(AbstractPhysicsModule):
         self.n_segments = n_segments
         self.config = config
         
-        self.L_seg = getattr(config, 'channel_length', 1.0) / self.n_segments
+        self.L_seg = config.channel_length / self.n_segments
         
         self._currents = np.zeros(self.n_segments)
         self._voltages = np.zeros(self.n_segments)

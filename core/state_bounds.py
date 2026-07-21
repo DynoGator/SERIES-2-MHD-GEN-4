@@ -16,6 +16,7 @@ class SafetyEvent:
     bound_violated: str
     value: float
     limit: float
+    reason: str
     state_snapshot: Any  # StateVector reference
 
 # Hard-coded absolute limits (Whitepaper §13.1)
@@ -55,6 +56,7 @@ def check_bounds(state) -> Optional[SafetyEvent]:
             bound_violated="T_core",
             value=state.T_core,
             limit=SAFETY_BOUNDS["T_core"]["max"],
+            reason=SAFETY_BOUNDS["T_core"]["reason"],
             state_snapshot=state,
         )
     
@@ -66,6 +68,7 @@ def check_bounds(state) -> Optional[SafetyEvent]:
             bound_violated="p_vessel",
             value=state.p_vessel,
             limit=SAFETY_BOUNDS["p_vessel"]["max"],
+            reason=SAFETY_BOUNDS["p_vessel"]["reason"],
             state_snapshot=state,
         )
     
@@ -78,6 +81,7 @@ def check_bounds(state) -> Optional[SafetyEvent]:
             bound_violated="omega",
             value=state.omega,
             limit=omega_max,
+            reason=SAFETY_BOUNDS["omega"]["reason"],
             state_snapshot=state,
         )
     
@@ -89,6 +93,7 @@ def check_bounds(state) -> Optional[SafetyEvent]:
             bound_violated="V_accum",
             value=state.V_accum,
             limit=SAFETY_BOUNDS["V_accum"]["min"],
+            reason=SAFETY_BOUNDS["V_accum"]["reason"],
             state_snapshot=state,
         )
     

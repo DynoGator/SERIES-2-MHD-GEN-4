@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 FROSS-4 Four-Stage Pressure Architecture
 """
@@ -10,6 +11,7 @@ from physics.thermo.accumulator import FROSSAccumulator
 class FROSS4(AbstractPhysicsModule):
     def __init__(self, config: SystemConfig):
         self.config = config
+        self.injected_pulse = 0.0
         self.k_diaphragm = 1e5
         self.mawp = config.max_pressure_vessel
         self.accumulator = FROSSAccumulator(config)
@@ -23,11 +25,14 @@ class FROSS4(AbstractPhysicsModule):
     def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         p_target = config.gas_mass * config.r_specific * state.T_core / config.plasma_vol
         
-        p_pulse = getattr(self, 'injected_pulse', 0.0)
+        p_pulse = self.injected_pulse
         p_stage2 = state.p_vessel - self.stage1_acoustic_response(p_pulse)
         
         x_diaph = self.stage2_diaphragm_displacement(p_stage2)
-        p_stage3 = p_stage2 - self.k_diaphragm * x_diaph
+        # Pressure transmitted to the accumulator is p_stage2 minus the stiffness drop.
+        # But x_diaph is dynamic. For a lumped model, we assume the diaphragm transmits pressure 
+        # and its stiffness adds a small offset. Let's use p_stage2 directly or p_stage2 - p_drop.
+        p_stage3 = p_stage2 # Assume perfect transmission for now
         
         p_accum = self.accumulator.pressure(state.V_accum)
         dV_dt = self.stage3_accumulator_absorption(p_stage3, p_accum)
@@ -50,7 +55,7 @@ class FROSS4(AbstractPhysicsModule):
         return p_in / self.k_diaphragm
 
     def stage3_accumulator_absorption(self, p_in: float, p_accum: float) -> float:
-        return self.accumulator.dV_dt(p_in, p_accum, 0.1, 10.0)
+        return self.accumulator.dV_dt(p_in, p_accum)
 
     def stage4_ultimate_protection(self, p_vessel: float) -> bool:
         return p_vessel > 0.95 * self.mawp

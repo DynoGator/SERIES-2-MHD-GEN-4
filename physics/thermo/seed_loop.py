@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 Seed Loop Mass Balance & Recovery
 """

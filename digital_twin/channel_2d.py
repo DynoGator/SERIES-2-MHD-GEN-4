@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 import numpy as np
 from core.state_vector import StateVector
 from config.system_config import SystemConfig

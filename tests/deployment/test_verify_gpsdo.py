@@ -4,6 +4,7 @@ import os
 
 def test_mock_locked_passes():
     env = os.environ.copy()
+    env["PYTHONPATH"] = os.getcwd()
     res = subprocess.run(
         ["python3", "scripts/verify_gpsdo_lock.py", "--mock"],
         capture_output=True, text=True, env=env
@@ -14,6 +15,7 @@ def test_mock_locked_passes():
 
 def test_mock_unlocked_fails():
     env = os.environ.copy()
+    env["PYTHONPATH"] = os.getcwd()
     env["GPSDO_MOCK_FAIL_LOCK"] = "1"
     res = subprocess.run(
         ["python3", "scripts/verify_gpsdo_lock.py", "--mock"],
@@ -25,6 +27,7 @@ def test_mock_unlocked_fails():
 
 def test_mock_allan_over_threshold_fails():
     env = os.environ.copy()
+    env["PYTHONPATH"] = os.getcwd()
     env["GPSDO_MOCK_ALLAN"] = "2.0e-9"
     res = subprocess.run(
         ["python3", "scripts/verify_gpsdo_lock.py", "--mock", "--threshold", "1.0e-9"],

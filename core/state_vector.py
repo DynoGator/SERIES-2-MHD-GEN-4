@@ -20,12 +20,11 @@ class StateVector(BaseModel):
     omega: float = Field(..., description="Rotor angular velocity [rad/s]")
     T_core: float = Field(..., gt=0.0, description="Plasma core temperature [K]")
     p_vessel: float = Field(..., gt=0.0, description="Vessel pressure [Pa]")
-    V_accum: float = Field(..., gt=0.0, description="Accumulator gas volume [m³]")
+    V_accum: float = Field(..., description="Accumulator gas volume [m³]")
     
     # ─── 1D Extension Points ───
     segment_currents: Optional[np.ndarray] = Field(None, description="8-segment currents [A]")
     segment_voltages: Optional[np.ndarray] = Field(None, description="8-segment voltages [V]")
-    segment_powers: Optional[np.ndarray] = Field(None, description="8-segment powers [W]")
     
     # ─── Thermodynamic & Control Extensions ───
     m_seed: float = Field(0.0, ge=0.0, description="Seed mass inventory [kg]")
@@ -42,7 +41,7 @@ class StateVector(BaseModel):
     }
     
     # ─── Validation ───
-    @field_validator("segment_currents", "segment_voltages", "segment_powers", mode="before")
+    @field_validator("segment_currents", "segment_voltages", mode="before")
     @classmethod
     def validate_segments(cls, v):
         if v is not None and len(v) != 8:
@@ -50,7 +49,7 @@ class StateVector(BaseModel):
         return v
     
     # ─── Serialization ───
-    def to_array(self) -> np.ndarray:
+    def to_array(self, has_segments: bool = False) -> np.ndarray:
         """Serialize core + segments to contiguous 1D float64 array."""
         core = np.array([
             self.theta, self.omega, self.T_core,
@@ -58,6 +57,9 @@ class StateVector(BaseModel):
             self.T_electron, self.coherence_r,
         ], dtype=np.float64)
         
+        if not has_segments:
+            return core
+            
         if self.segment_currents is not None:
             core = np.concatenate([core, self.segment_currents.astype(np.float64)])
         else:
@@ -71,20 +73,37 @@ class StateVector(BaseModel):
         return core
     
     @classmethod
+    def is_physical(cls, arr: np.ndarray) -> Optional[str]:
+        if not np.all(np.isfinite(arr[:8])):
+            for i, name in enumerate(["theta", "omega", "T_core", "p_vessel", "V_accum", "m_seed", "T_electron", "coherence_r"]):
+                if not np.isfinite(arr[i]):
+                    return f"non-finite:{name}"
+        if arr[2] <= 0.0:
+            return "T_core<=0"
+        if arr[3] <= 0.0:
+            return "p_vessel<=0"
+        return None
+
+    @classmethod
     def from_array(cls, arr: np.ndarray, has_segments: bool = False) -> StateVector:
         """Deserialize from 1D numpy array."""
         if len(arr) < 8:
             raise ValueError(f"Array too short: expected >=8, got {len(arr)}")
         
+        reason = cls.is_physical(arr)
+        if reason is not None:
+            from physics.base import NonPhysicalStateError
+            raise NonPhysicalStateError(reason)
+        
         base = {
             "theta": float(arr[0]),
             "omega": float(arr[1]),
-            "T_core": max(float(arr[2]), 1e-3),
-            "p_vessel": max(float(arr[3]), 1e-3),
-            "V_accum": max(float(arr[4]), 1e-6),
-            "m_seed": max(float(arr[5]), 0.0),
-            "T_electron": max(float(arr[6]), 1e-3),
-            "coherence_r": min(max(float(arr[7]), 0.0), 1.0),
+            "T_core": float(arr[2]),
+            "p_vessel": float(arr[3]),
+            "V_accum": float(arr[4]),
+            "m_seed": float(arr[5]),
+            "T_electron": float(arr[6]),
+            "coherence_r": float(arr[7]),
         }
         
         if has_segments and len(arr) >= 24:

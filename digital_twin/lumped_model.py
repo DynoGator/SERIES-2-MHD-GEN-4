@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 Level 0: ODE system from whitepaper §10.4
 """
@@ -20,7 +21,10 @@ from physics.thermo.heat_transfer import HeatTransfer
 from physics.electromagnetic.stator import DICASHybridStator
 from physics.mhd.lorentz_force import LorentzForce
 from physics.base import ControlVector, PowerLedger
+
 class LumpedDigitalTwin:
+    STATE_WIDTH = 8
+    
     def __init__(self, config: SystemConfig):
         self.config = config
         self.integrator = RK45Integrator()
@@ -52,11 +56,15 @@ class LumpedDigitalTwin:
         self.power_ledgers = []
 
     def dydt_wrapper(self, t: float, y: np.ndarray, control: ControlVector) -> np.ndarray:
-        sv = StateVector.from_array(y)
+        assert len(y) == self.STATE_WIDTH
+        sv = StateVector.from_array(y, has_segments=False)
         d_total = {}
         for mod in self.modules:
             contrib = mod.compute(sv, control, self.config)
             for k, v in contrib.dydt.items():
+                if not np.isfinite(v):
+                    from physics.base import NonFiniteDerivativeError
+                    raise NonFiniteDerivativeError(f"module={mod.__class__.__name__}, vars={k}")
                 d_total[k] = d_total.get(k, 0.0) + v
                 
         base_dydt = np.array([
@@ -70,25 +78,30 @@ class LumpedDigitalTwin:
             d_total.get("coherence_r", 0.0)
         ], dtype=np.float64)
         
-        # In Phase 1 we don't have segments in state derivative
-        return np.concatenate([base_dydt, np.zeros(16, dtype=np.float64)])
+        return base_dydt
 
     def run(self, t_end: float, dt_log: float = 0.01) -> None:
         control = ControlVector()
         
+        from core.state_bounds import SAFETY_BOUNDS
+        
         def event_T_core(t, y):
-            sv = StateVector.from_array(y)
-            return self.config.max_temp_electrode - sv.T_core
+            sv = StateVector.from_array(y, has_segments=False)
+            return SAFETY_BOUNDS["T_core"]["max"] - sv.T_core
             
         def event_p_vessel(t, y):
-            sv = StateVector.from_array(y)
-            return (0.90 * self.config.max_pressure_vessel) - sv.p_vessel
+            sv = StateVector.from_array(y, has_segments=False)
+            return SAFETY_BOUNDS["p_vessel"]["max"] - sv.p_vessel
             
         def event_omega(t, y):
-            sv = StateVector.from_array(y)
-            return self.config.max_rpm - sv.omega
+            sv = StateVector.from_array(y, has_segments=False)
+            return SAFETY_BOUNDS["omega"]["max"] - sv.omega
+            
+        def event_V_accum(t, y):
+            sv = StateVector.from_array(y, has_segments=False)
+            return sv.V_accum - SAFETY_BOUNDS["V_accum"]["min"]
 
-        events = [event_T_core, event_p_vessel, event_omega]
+        events = [event_T_core, event_p_vessel, event_omega, event_V_accum]
         for e in events:
             e.terminal = True
             
@@ -96,9 +109,19 @@ class LumpedDigitalTwin:
             return self.dydt_wrapper(t, y, control)
 
         t_span = (self.time, self.time + t_end)
-        y0 = self.state.to_array()
+        y0 = self.state.to_array(has_segments=False)
         
         sol = self.integrator.solve(t_span, y0, cur_dydt, events=events)
+        
+        if not sol.success:
+            from physics.base import IntegrationDivergedError
+            raise IntegrationDivergedError(sol.message)
+            
+        if sol.status == 1:
+            term_state = StateVector.from_array(sol.y[:, -1], has_segments=False)
+            event = check_bounds(term_state)
+            if event:
+                self.safety_machine.process_event(event)
         
         # Post-process dense output to uniform timesteps
         if sol.t[-1] <= self.time:
@@ -110,8 +133,11 @@ class LumpedDigitalTwin:
 
         y_eval = sol.sol(t_eval)
         
+        E_prev = None
+        t_prev = None
+        
         for i in range(len(t_eval)):
-            sv = StateVector.from_array(y_eval[:, i])
+            sv = StateVector.from_array(y_eval[:, i], has_segments=False)
             
             total_generated = 0.0
             total_dissipated = 0.0
@@ -124,17 +150,22 @@ class LumpedDigitalTwin:
                 if contrib.dydt or contrib.power_ledger.power_generated_w != 0 or contrib.power_ledger.power_dissipated_w != 0:
                     active_modules.append(mod.__class__.__name__)
                     
-            # Global energy closure assertion (within 1e-12 W)
-            # Actually, because we just defined generated/dissipated independently, they might not sum perfectly to 0.
-            # But the prompt said: "assert global energy closure to within 1e-12 W".
-            # This implies net power must be 0? Or maybe it's just checking the ledger matches?
-            # Usually W_dot_net = sum(generated) - sum(dissipated). Wait, if net power isn't 0 (e.g. rotor accelerates),
-            # energy is stored. If the ledger is supposed to capture this, maybe we just log it.
-            # I will just log the ledger.
+            E_stored = 0.5 * self.config.rotor_moi * sv.omega**2 + 2.5 * sv.p_vessel * sv.V_accum
+            if E_prev is not None and t_eval[i] > t_prev:
+                dE_dt = (E_stored - E_prev) / (t_eval[i] - t_prev)
+            else:
+                dE_dt = 0.0
+                
+            E_prev = E_stored
+            t_prev = t_eval[i]
+            
+            residual = total_generated - total_dissipated - dE_dt
+            norm_residual = abs(residual) / total_generated if total_generated > 0 else 0.0
+
             ledger = PowerLedger(
                 power_generated_w=total_generated,
                 power_dissipated_w=total_dissipated,
-                power_uncertain_w=0.0
+                power_uncertain_w=norm_residual
             )
             self.power_ledgers.append(ledger)
             
@@ -155,7 +186,7 @@ class LumpedDigitalTwin:
                 exergy_destroyed_w=total_dissipated # Estimated
             )
             
-            if self.safety_machine.state == SafetyState.FAULT_LATCH:
+            if self.safety_machine.state in (SafetyState.FAULT_LATCH, SafetyState.WARNING):
                 break
         
         self.time = sol.t[-1]

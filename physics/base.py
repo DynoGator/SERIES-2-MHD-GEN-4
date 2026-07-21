@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 from abc import ABC, abstractmethod
 from typing import Dict, Set, Any
 from dataclasses import dataclass
@@ -14,6 +15,15 @@ class DerivativeContribution:
     power_ledger: 'PowerLedger'
 
 class ValidationError(Exception):
+    pass
+
+class NonPhysicalStateError(ValidationError):
+    pass
+
+class IntegrationDivergedError(ValidationError):
+    pass
+
+class NonFiniteDerivativeError(ValidationError):
     pass
 
 class AbstractPhysicsModule(ABC):

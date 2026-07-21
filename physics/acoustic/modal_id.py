@@ -1,3 +1,4 @@
+# MODULE-STATUS: SCAFFOLD
 """
 Broadband System Identification (Acoustic)
 """
