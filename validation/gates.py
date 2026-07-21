@@ -24,6 +24,14 @@ class ValidationGate(ABC):
     def __init__(self, config: Any):
         self.config = config
 
+    def _run_twin_safely(self, twin: Union[LumpedDigitalTwin, Network1DTwin], dt: float, gate_id: str) -> Optional[GateResult]:
+        from physics.base import IntegrationDivergedError
+        try:
+            twin.run(dt)
+            return None
+        except IntegrationDivergedError as e:
+            return GateResult(gate_id, Verdict.INDETERMINATE, {}, {}, "", f"Integration Diverged: {str(e)}")
+
     @abstractmethod
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
         pass
@@ -34,7 +42,8 @@ class ValidationGate(ABC):
 
 class Gate0_EnergyAccounting(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        twin.run(0.1)
+        err_res = self._run_twin_safely(twin, 0.1, "G0")
+        if err_res: return err_res
         if not twin.power_ledgers:
             return GateResult("G0", Verdict.INDETERMINATE, {}, {}, "", "power_ledgers not provided by twin")
         imbalance = twin.power_ledgers[-1].power_uncertain_w
@@ -59,7 +68,8 @@ class Gate3_FROSS4Transient(ValidationGate):
         if getattr(twin, "fross", None):
             p_pulse = getattr(twin.fross, 'injected_pulse', 0.0)
             twin.fross.injected_pulse = p_pulse
-        twin.run(0.1)
+        err_res = self._run_twin_safely(twin, 0.1, "G3")
+        if err_res: return err_res
         max_p = twin.state.p_vessel
         passed = (max_p < 0.9 * self.config.max_pressure_vessel)
         return GateResult("G3", Verdict.PASS if passed else Verdict.FAIL, {"max_p": max_p}, {"p_vessel_limit": passed}, "", "Pressure exceeded limit" if not passed else None)
@@ -87,7 +97,8 @@ class Gate7_PSMICValidation(ValidationGate):
 
 class Gate8_EnergyClosure(ValidationGate):
     def execute(self, twin: Union[LumpedDigitalTwin, Network1DTwin]) -> GateResult:
-        twin.run(0.1)
+        err_res = self._run_twin_safely(twin, 0.1, "G8")
+        if err_res: return err_res
         if not twin.power_ledgers:
             return GateResult("G8", Verdict.INDETERMINATE, {}, {}, "", "energy_imbalance not provided by twin")
         imbalance = twin.power_ledgers[-1].power_uncertain_w
