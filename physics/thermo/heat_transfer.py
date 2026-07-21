@@ -24,7 +24,7 @@ class HeatTransfer(AbstractPhysicsModule):
         term = abs(Omega) * (r_eff**2) / nu
         return Nu0 * (1.0 + C * np.sqrt(term))
 
-    def compute(self, state, control, config) -> DerivativeContribution:
+    def _compute_impl(self, state, control, config) -> DerivativeContribution:
         T_coolant = config.coolant_temp
         h = self.h_dynamic(state.p_vessel, state.omega, state.T_core, T_coolant)
         

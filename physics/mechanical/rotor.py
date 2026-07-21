@@ -20,7 +20,7 @@ class RotorDynamics(AbstractPhysicsModule):
     def angular_acceleration(self, tau_drive: float, tau_em: float, tau_fric: float, J: float) -> float:
         return (1.0 / J) * (tau_drive - tau_em - tau_fric)
 
-    def compute(self, state, control, config) -> DerivativeContribution:
+    def _compute_impl(self, state, control, config) -> DerivativeContribution:
         J = config.rotor_moi
         tau_drive = control.tau_drive
         # Note: tau_em could be computed here, or by LorentzForce. For lumped model, we assume tau_em is passed or we just use 0 here, and LorentzForce subtracts it.

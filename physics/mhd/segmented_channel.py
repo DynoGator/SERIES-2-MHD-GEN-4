@@ -29,7 +29,7 @@ class SegmentedFaradayChannel(AbstractPhysicsModule):
     def contributed_derivatives(self) -> Set[str]:
         return {"omega", "T_core"}
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         phi_psmic = control.phase_cmd
         kappa_psmic = 1.0 + 0.35 * math.sin(4.0 * phi_psmic)
         B_eff = config.B_max * (abs(kappa_psmic) ** 0.6)

@@ -28,7 +28,7 @@ class DLoopRankine(AbstractPhysicsModule):
         h_fg = 2.26e6  # J/kg
         return max(Q_exhaust / h_fg, 0.0)
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         Q_exhaust = 5000.0
         eta = self.rankine_efficiency(state.T_core * 0.5, 300.0)
         W_out = Q_exhaust * eta

@@ -26,7 +26,7 @@ class Recuperator(AbstractPhysicsModule):
             return 0.0
         return Q_recovered * (1.0 - T0 / T_source) - W_compressor_penalty
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         # Dummy implementation for system integration
         Q_recovered = 1000.0 * self.epsilon
         W_penalty = 100.0

@@ -19,7 +19,7 @@ class SparkLoop(BaseScavenger):
         # With spark loop: lower energy required from external source
         return (40.0, 0.0)
 
-    def compute(self, state: StateVector, control: ControlVector, config: Any) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: Any) -> DerivativeContribution:
         if not self.is_enabled:
             return DerivativeContribution(
                 dydt={}, power_ledger=PowerLedger(power_generated_w=0.0, power_dissipated_w=0.0, power_uncertain_w=0.0)

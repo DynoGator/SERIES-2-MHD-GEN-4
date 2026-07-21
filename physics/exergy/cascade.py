@@ -36,7 +36,7 @@ class ExergyCascade(AbstractPhysicsModule):
         eta = (self._W_net + self._X_useful) / denominator
         return min(max(eta, 0.0), 1.0)
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         return DerivativeContribution(
             dydt={},
             power_ledger=PowerLedger(power_generated_w=0.0, power_dissipated_w=0.0, power_uncertain_w=0.0)

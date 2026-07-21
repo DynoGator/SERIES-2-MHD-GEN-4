@@ -130,7 +130,24 @@ class Network1DTwin:
         t_span = (self.time, self.time + dt)
         y0 = self.state.to_array(has_segments=True)
         
-        sol = self.integrator.solve(t_span, y0, cur_dydt)
+        from physics.base import NonPhysicalStateError
+        try:
+            sol = self.integrator.solve(t_span, y0, cur_dydt)
+        except NonPhysicalStateError as e:
+            self.telemetry.log(
+                sim_time_s=self.time,
+                state_vector=self.state.model_dump(),
+                control_inputs={},
+                power_terms={},
+                safety_state="FAULT_LATCH",
+                rng_seed=42,
+                physics_modules_active=[],
+                power_ledger_total_w=0.0,
+                exergy_destroyed_w=0.0,
+                fault_module=getattr(e, 'module_name', 'Unknown'),
+                fault_reason=str(e)
+            )
+            raise
         
         if not sol.success:
             from physics.base import IntegrationDivergedError

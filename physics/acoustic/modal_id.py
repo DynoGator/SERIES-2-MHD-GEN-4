@@ -19,7 +19,7 @@ class AcousticModalID(AbstractPhysicsModule):
     def contributed_derivatives(self) -> Set[str]:
         return set()
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         return DerivativeContribution(dydt={}, power_ledger=PowerLedger())
 
     def inject_chirp(self, f_start: float, f_end: float, duration: float, t_array: np.ndarray) -> np.ndarray:

@@ -23,7 +23,7 @@ class SeedLoop(AbstractPhysicsModule):
     def contributed_derivatives(self) -> Set[str]:
         return {"m_seed"}
 
-    def compute(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: SystemConfig) -> DerivativeContribution:
         m_dot_in = self.injection_rate(control.seed_injection_rate)
         
         m_total = config.gas_mass + state.m_seed

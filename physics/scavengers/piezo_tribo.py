@@ -17,7 +17,7 @@ class PiezoTribo(BaseScavenger):
     def ab_test(self, twin, duration: float) -> Tuple[float, float]:
         return (self.harvested, 0.0)
 
-    def compute(self, state: StateVector, control: ControlVector, config: Any) -> DerivativeContribution:
+    def _compute_impl(self, state: StateVector, control: ControlVector, config: Any) -> DerivativeContribution:
         if not self.is_enabled:
             return DerivativeContribution(dydt={}, power_ledger=PowerLedger(0.0, 0.0, 0.0))
             

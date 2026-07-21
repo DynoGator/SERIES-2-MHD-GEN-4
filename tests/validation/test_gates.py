@@ -12,7 +12,7 @@ def test_g0_passes_with_balanced_ledger():
         def required_state_vars(self): return set()
         def contributed_derivatives(self): return set()
         def validate(self, config): return []
-        def compute(self, state, control, config):
+        def _compute_impl(self, state, control, config):
             return DerivativeContribution(
                 dydt={},
                 power_ledger=PowerLedger(power_generated_w=1000.0, power_dissipated_w=1000.0)
@@ -49,7 +49,7 @@ def test_g8_closes_energy():
         def required_state_vars(self): return set()
         def contributed_derivatives(self): return set()
         def validate(self, config): return []
-        def compute(self, state, control, config):
+        def _compute_impl(self, state, control, config):
             return DerivativeContribution(
                 dydt={},
                 power_ledger=PowerLedger(power_generated_w=1000.0, power_dissipated_w=1000.0)
@@ -65,7 +65,7 @@ class MockLeakyModule(AbstractPhysicsModule):
     def required_state_vars(self): return set()
     def contributed_derivatives(self): return set()
     def validate(self, config): return []
-    def compute(self, state, control, config):
+    def _compute_impl(self, state, control, config):
         # Claim we generated 1000W, but don't change any state variables
         # This creates a massive energy imbalance
         return DerivativeContribution(

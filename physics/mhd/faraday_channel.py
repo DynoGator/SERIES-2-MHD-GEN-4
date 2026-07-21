@@ -31,7 +31,7 @@ class FaradayChannel(AbstractPhysicsModule):
         """Induced voltage."""
         return u_plasma * B_eff * L_eff
 
-    def compute(self, state, control, config) -> DerivativeContribution:
+    def _compute_impl(self, state, control, config) -> DerivativeContribution:
         M_carrier = 0.039948 # Argon kg/mol
         M_seed = 0.0390983 # Potassium kg/mol
         carrier_mass = config.gas_mass

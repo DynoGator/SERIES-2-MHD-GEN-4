@@ -72,7 +72,7 @@ class WorkingFluid(AbstractPhysicsModule):
             rho=rho
         )
 
-    def compute(self, state, control, config) -> DerivativeContribution:
+    def _compute_impl(self, state, control, config) -> DerivativeContribution:
         return DerivativeContribution(
             dydt={},
             power_ledger=PowerLedger()

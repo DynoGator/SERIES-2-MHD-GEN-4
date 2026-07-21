@@ -26,8 +26,8 @@ class RK45Integrator(Integrator):
     SciPy-backed RK45 with dense output and event detection.
     All safety boundaries must be registered as terminal events.
     """
-    def __init__(self, max_step: float = 0.01, rtol: float = 1e-6, 
-                 atol: float = 1e-9):
+    def __init__(self, max_step: float = 0.01, rtol: float = 1e-4, 
+                 atol: float = 1e-6):
         self.max_step = max_step
         self.rtol = rtol
         self.atol = atol
@@ -43,7 +43,7 @@ class RK45Integrator(Integrator):
             fun=dydt_fn,
             t_span=t_span,
             y0=y0,
-            method='RK45',
+            method='BDF',
             dense_output=True,
             events=events,
             max_step=self.max_step,
