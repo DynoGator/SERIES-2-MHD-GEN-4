@@ -8,6 +8,7 @@ def test_fault_latch():
     set_deterministic_seed()
     config = SystemConfig()
     twin = LumpedDigitalTwin(config)
+    twin.state = twin.state.evolve(p_vessel=config.accum_precharge)
     
     twin.run(1.0)
     assert twin.safety_machine.state == SafetyState.ARMED

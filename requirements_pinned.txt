@@ -1,3 +1,4 @@
+-e git+https://github.com/DynoGator/SERIES-2-MHD-GEN-4.git@b25569ff57abb78350b281fd05ef9bf311559fd7#egg=2mhd_digital_twin
 altgraph==0.17.5
 annotated-types==0.7.0
 attrs==26.1.0

@@ -29,7 +29,7 @@ class StateVector(BaseModel):
     # ─── Thermodynamic & Control Extensions ───
     m_seed: float = Field(0.0, ge=0.0, description="Seed mass inventory [kg]")
     T_electron: float = Field(300.0, gt=0.0, description="Electron temperature [K]")
-    coherence_r: float = Field(0.0, ge=0.0, le=1.0, description="Kuramoto order parameter")
+    coherence_r: float = Field(0.0, description="Kuramoto order parameter")
     
     # ─── Safety & State Machine ───
     safety_state: str = Field("ARMED", description="Safety machine state")
