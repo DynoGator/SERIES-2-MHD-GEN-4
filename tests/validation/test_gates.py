@@ -7,6 +7,17 @@ from validation.gates import Gate0_EnergyAccounting, Gate3_FROSS4Transient, Gate
 def test_g0_passes_with_balanced_ledger():
     config = SystemConfig()
     twin = Network1DTwin(config)
+    # Drive non-trivial power through the twin to avoid 0 ≈ 0 tautology
+    class MockPowerModule(AbstractPhysicsModule):
+        def required_state_vars(self): return set()
+        def contributed_derivatives(self): return set()
+        def validate(self, config): return []
+        def compute(self, state, control, config):
+            return DerivativeContribution(
+                dydt={},
+                power_ledger=PowerLedger(power_generated_w=1000.0, power_dissipated_w=1000.0)
+            )
+    twin.modules.append(MockPowerModule())
     gate = Gate0_EnergyAccounting(config)
     res = gate.execute(twin)
     assert res.verdict == Verdict.PASS
@@ -33,6 +44,17 @@ def test_g3_limits_pressure():
 def test_g8_closes_energy():
     config = SystemConfig()
     twin = Network1DTwin(config)
+    # Drive non-trivial power through the twin to avoid 0 ≈ 0 tautology
+    class MockPowerModule(AbstractPhysicsModule):
+        def required_state_vars(self): return set()
+        def contributed_derivatives(self): return set()
+        def validate(self, config): return []
+        def compute(self, state, control, config):
+            return DerivativeContribution(
+                dydt={},
+                power_ledger=PowerLedger(power_generated_w=1000.0, power_dissipated_w=1000.0)
+            )
+    twin.modules.append(MockPowerModule())
     gate = Gate8_EnergyClosure(config)
     res = gate.execute(twin)
     assert res.verdict == Verdict.PASS

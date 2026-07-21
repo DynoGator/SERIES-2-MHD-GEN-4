@@ -17,7 +17,7 @@ class SystemConfig(BaseModel):
     channel_length: float = Field(default=1.0, description="Faraday channel length (m) # PROVISIONAL")
     channel_width: float = Field(default=0.1, description="Faraday channel width (m) # PROVISIONAL")
     channel_height: float = Field(default=0.1, description="Faraday channel height (m) # PROVISIONAL")
-    C_d: float = Field(default=0.3, description="Discharge coefficient # PROVISIONAL")
+    C_d: float = Field(default=0.61, description="Discharge coefficient (Merritt) # PROVISIONAL")
     
     # Electromagnetic
     B_max: float = Field(default=2.0, description="Maximum magnetic flux density (T)")
